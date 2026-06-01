@@ -1,7 +1,6 @@
 --[[
-    Kitsune-Key-System (Multi-Theme Edition)
-    Theme Options: "Dark Kitsune", "White Kitsune", "Tokyo Light", "Midnight"
-    Fitur: Animasi Smooth, Responsive UI, Auto Run Loadstring on Success.
+    Kitsune-Key-System (Ultra Modern Fluent Edition)
+    Fitur: Border Glow, Smooth Animation, Auto Accent Text, Dynamic Themes.
 ]]
 
 local KitsuneKeyUI = {}
@@ -16,33 +15,75 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "KitsuneKeyUI_Instance"
 
--- Multi-Theme Color Configurations
+-- 6 Premium Modern Themes
 local Themes = {
     ["Dark Kitsune"] = {
-        Background = Color3.fromRGB(15, 11, 11),
-        CardBackground = Color3.fromRGB(24, 16, 16),
-        AccentPrimary = Color3.fromRGB(195, 22, 34),
-        AccentSecondary = Color3.fromRGB(115, 10, 18),
+        Background = Color3.fromRGB(13, 9, 9),
+        CardBackground = Color3.fromRGB(20, 14, 14),
+        AccentPrimary = Color3.fromRGB(226, 37, 53),
+        AccentSecondary = Color3.fromRGB(143, 14, 25),
         TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(175, 155, 155),
-        Border = Color3.fromRGB(45, 28, 28),
+        TextSecondary = Color3.fromRGB(170, 150, 150),
+        Border = Color3.fromRGB(38, 24, 24),
+        LightMode = false
     },
     ["White Kitsune"] = {
-        Background = Color3.fromRGB(245, 245, 247),
+        Background = Color3.fromRGB(244, 244, 246),
         CardBackground = Color3.fromRGB(255, 255, 255),
-        AccentPrimary = Color3.fromRGB(215, 35, 45),
-        AccentSecondary = Color3.fromRGB(160, 20, 30),
-        TextPrimary = Color3.fromRGB(30, 30, 35),
-        TextSecondary = Color3.fromRGB(110, 110, 120),
-        Border = Color3.fromRGB(220, 220, 225),
+        AccentPrimary = Color3.fromRGB(226, 37, 53),
+        AccentSecondary = Color3.fromRGB(180, 20, 32),
+        TextPrimary = Color3.fromRGB(28, 28, 30),
+        TextSecondary = Color3.fromRGB(130, 130, 140),
+        Border = Color3.fromRGB(225, 225, 230),
+        LightMode = true
+    },
+    ["Midnight Token"] = {
+        Background = Color3.fromRGB(9, 10, 15),
+        CardBackground = Color3.fromRGB(15, 17, 26),
+        AccentPrimary = Color3.fromRGB(88, 101, 242), -- Discord Blue
+        AccentSecondary = Color3.fromRGB(64, 75, 180),
+        TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(140, 145, 160),
+        Border = Color3.fromRGB(28, 31, 48),
+        LightMode = false
+    },
+    ["Tokyo Light"] = {
+        Background = Color3.fromRGB(240, 242, 248),
+        CardBackground = Color3.fromRGB(255, 255, 255),
+        AccentPrimary = Color3.fromRGB(114, 137, 218),
+        AccentSecondary = Color3.fromRGB(90, 110, 180),
+        TextPrimary = Color3.fromRGB(40, 44, 55),
+        TextSecondary = Color3.fromRGB(120, 125, 140),
+        Border = Color3.fromRGB(220, 224, 235),
+        LightMode = true
+    },
+    ["Cyberpunk"] = {
+        Background = Color3.fromRGB(12, 12, 8),
+        CardBackground = Color3.fromRGB(22, 22, 12),
+        AccentPrimary = Color3.fromRGB(254, 231, 21), -- Neon Yellow
+        AccentSecondary = Color3.fromRGB(210, 190, 10),
+        TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(160, 160, 120),
+        Border = Color3.fromRGB(45, 45, 20),
+        LightMode = false
+    },
+    ["Amethyst"] = {
+        Background = Color3.fromRGB(11, 8, 15),
+        CardBackground = Color3.fromRGB(18, 13, 26),
+        AccentPrimary = Color3.fromRGB(168, 85, 247), -- Purple Rose
+        AccentSecondary = Color3.fromRGB(115, 40, 180),
+        TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(155, 140, 165),
+        Border = Color3.fromRGB(36, 25, 50),
+        LightMode = false
     }
 }
 
--- Hapus UI lama jika ada yang menyangkut
+-- Cleanup Pre-existing Instance
 local oldUI = PlayerGui:FindFirstChild(UI_NAME)
 if oldUI then oldUI:Destroy() end
 
--- Helper Elements Builder
+-- Advanced Functional Instancing
 local function CreateElement(className, properties, children)
     local element = Instance.new(className)
     for key, value in pairs(properties) do
@@ -56,7 +97,7 @@ local function CreateElement(className, properties, children)
     return element
 end
 
--- Smooth Draggable System
+-- Inertia/Smooth Draggable
 local function MakeDraggable(dragFrame, parentFrame)
     local dragging, dragInput, dragStart, startPos
     dragFrame.InputBegan:Connect(function(input)
@@ -77,34 +118,30 @@ local function MakeDraggable(dragFrame, parentFrame)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            TweenService:Create(parentFrame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TweenService:Create(parentFrame, TweenInfo.new(0.15, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
                 Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             }):Play()
         end
     end)
 end
 
--- Premium Button Hover Effect
+-- Micro-Interaction Button Hover
 local function ApplyButtonEffects(button, normalColor, hoverColor)
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundColor3 = hoverColor,
-            Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, button.Size.Y.Scale, button.Size.Y.Offset + 2)
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = hoverColor
         }):Play()
     end)
     button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundColor3 = normalColor,
-            Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, button.Size.Y.Scale, button.Size.Y.Offset - 2)
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = normalColor
         }):Play()
     end)
 end
 
--- Main Window Creation
 function KitsuneKeyUI:CreateWindow(config)
     local self = setmetatable({}, KitsuneKeyUI)
     
-    -- Ambil tema yang dipilih atau gunakan default "Dark Kitsune"
     local selectedTheme = config.Theme or "Dark Kitsune"
     self.Theme = Themes[selectedTheme] or Themes["Dark Kitsune"]
     local currentTheme = self.Theme
@@ -114,117 +151,134 @@ function KitsuneKeyUI:CreateWindow(config)
     self.GetKeyLink = config.GetKeyLink or ""
     self.ScriptToRun = config.ScriptOnSuccess or ""
     
-    -- Main ScreenGui
+    -- Main Layer
     self.ScreenGui = CreateElement("ScreenGui", {
         Name = UI_NAME,
         ResetOnSpawn = false,
         Parent = PlayerGui
     })
 
-    -- Notification Setup
+    -- Notification Stack Frame
     self.NotificationContainer = CreateElement("Frame", {
         Size = UDim2.new(0, 310, 1, -40),
         Position = UDim2.new(1, -330, 0, 20),
         BackgroundTransparency = 1,
         Parent = self.ScreenGui
     }, {
-        CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Bottom})
+        CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10), VerticalAlignment = Enum.VerticalAlignment.Bottom})
     })
 
-    -- Modern Key Window Center Frame
+    -- Glassmorphism Inspired Center Frame
     self.MainFrame = CreateElement("Frame", {
-        Size = UDim2.new(0, 420, 0, 0), -- Start di 0 untuk animasi open
-        Position = UDim2.new(0.5, -210, 0.5, -115),
+        Size = UDim2.new(0, 410, 0, 0), -- Start collapsed
+        Position = UDim2.new(0.5, -205, 0.5, -100),
         BackgroundColor3 = currentTheme.Background,
         BackgroundTransparency = 1,
         ClipsDescendants = true,
         Parent = self.ScreenGui
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 12), Parent = self.MainFrame})
-    local mainStroke = CreateElement("UIStroke", {Thickness = 1.2, Color = currentTheme.Border, Transparency = 1, Parent = self.MainFrame})
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 16), Parent = self.MainFrame}) -- Lebih membulat halus
+    local mainStroke = CreateElement("UIStroke", {Thickness = 1.5, Color = currentTheme.Border, Transparency = 1, Parent = self.MainFrame})
 
-    -- Elegant Top Gradient Glow
-    local topGlow = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 3), BackgroundColor3 = Color3.new(1,1,1), Parent = self.MainFrame}, {
+    -- Dynamic Header Gradient Bar
+    local topGlow = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 3.5), BackgroundColor3 = Color3.new(1,1,1), Parent = self.MainFrame}, {
         CreateElement("UIGradient", {Color = ColorSequence.new(currentTheme.AccentPrimary, currentTheme.AccentSecondary)})
     })
 
-    -- Header / Drag Bar
-    local header = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 45), BackgroundTransparency = 1, Parent = self.MainFrame})
+    -- Top Bar (Drag Area)
+    local header = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 50), BackgroundTransparency = 1, Parent = self.MainFrame})
     MakeDraggable(header, self.MainFrame)
 
     CreateElement("TextLabel", {
-        Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 15, TextColor3 = currentTheme.TextPrimary,
-        Position = UDim2.new(0, 18, 0, 0), Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
+        Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = currentTheme.TextPrimary,
+        Position = UDim2.new(0, 20, 0, 0), Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
         BackgroundTransparency = 1, Parent = header
     })
 
-    -- Close Button
+    -- Modern Minimalist Close Target
     local closeBtn = CreateElement("TextButton", {
-        Text = "×", Font = Enum.Font.GothamMedium, TextSize = 22, TextColor3 = currentTheme.TextSecondary,
-        Position = UDim2.new(1, -40, 0.5, -14), Size = UDim2.new(0, 28, 0, 28), BackgroundColor3 = currentTheme.CardBackground, Parent = header
+        Text = "×", Font = Enum.Font.GothamMedium, TextSize = 20, 
+        TextColor3 = currentTheme.TextSecondary, AutoButtonColor = false,
+        Position = UDim2.new(1, -44, 0.5, -14), Size = UDim2.new(0, 28, 0, 28), 
+        BackgroundColor3 = currentTheme.CardBackground, Parent = header
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = closeBtn})
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = closeBtn})
+    CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = closeBtn})
+    ApplyButtonEffects(closeBtn, currentTheme.CardBackground, currentTheme.Border)
     closeBtn.MouseButton1Click:Connect(function() self:DestroyUI() end)
 
-    -- Container Body
+    -- Context Panel
     local body = CreateElement("Frame", {
         Position = UDim2.new(0, 20, 0, 55), Size = UDim2.new(1, -40, 1, -75), BackgroundTransparency = 1, Parent = self.MainFrame
     })
 
     CreateElement("TextLabel", {
-        Text = "Silahkan masukkan access key kamu untuk verifikasi sistem keamanan script.", 
-        Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = currentTheme.TextSecondary, TextWrapped = true,
-        Size = UDim2.new(1, 0, 0, 30), TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top,
+        Text = "Masukkan access token / key valid untuk mengaktifkan modul eksekusi script ini.", 
+        Font = Enum.Font.Gotham, TextSize = 11.5, TextColor3 = currentTheme.TextSecondary, TextWrapped = true,
+        Size = UDim2.new(1, 0, 0, 32), TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top,
         BackgroundTransparency = 1, Parent = body
     })
 
-    -- Modern Input TextBox Card
+    -- Clean Input Element
     local inputCard = CreateElement("Frame", {
-        Position = UDim2.new(0, 0, 0, 40), Size = UDim2.new(1, 0, 0, 42),
+        Position = UDim2.new(0, 0, 0, 42), Size = UDim2.new(1, 0, 0, 44),
         BackgroundColor3 = currentTheme.CardBackground, Parent = body
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = inputCard})
-    CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = inputCard})
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = inputCard})
+    local inputStroke = CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = inputCard})
 
     local textBox = CreateElement("TextBox", {
         Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1,
-        Text = "", PlaceholderText = "Masukkan Security Key Disini...", Font = Enum.Font.Gotham, TextSize = 13,
-        TextColor3 = currentTheme.TextPrimary, PlaceholderColor3 = selectedTheme == "White Kitsune" and Color3.fromRGB(160, 160, 170) or Color3.fromRGB(110, 95, 95), Parent = inputCard
+        Text = "", PlaceholderText = "Paste token key disini...", Font = Enum.Font.Gotham, TextSize = 12.5,
+        TextColor3 = currentTheme.TextPrimary, 
+        PlaceholderColor3 = currentTheme.LightMode and Color3.fromRGB(150, 150, 160) or Color3.fromRGB(105, 95, 95), 
+        Parent = inputCard
     })
+    
+    -- TextBox Focus Accent Interaction
+    textBox.Focused:Connect(function()
+        TweenService:Create(inputStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Color = currentTheme.AccentPrimary}):Play()
+    end)
+    textBox.FocusLost:Connect(function()
+        TweenService:Create(inputStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Color = currentTheme.Border}):Play()
+    end)
 
-    -- Action Grid Buttons
+    -- Button Layout Container
     local btnGrid = CreateElement("Frame", {
-        Position = UDim2.new(0, 0, 0, 98), Size = UDim2.new(1, 0, 0, 38), BackgroundTransparency = 1, Parent = body
+        Position = UDim2.new(0, 0, 0, 102), Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Parent = body
     })
 
     local getKeyBtn = CreateElement("TextButton", {
-        Text = "Get Key", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = currentTheme.TextPrimary,
-        Size = UDim2.new(0.48, 0, 1, 0), BackgroundColor3 = currentTheme.CardBackground, Parent = btnGrid
+        Text = "Get Token Link", Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+        Size = UDim2.new(0.48, 0, 1, 0), BackgroundColor3 = currentTheme.CardBackground, AutoButtonColor = false, Parent = btnGrid
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = getKeyBtn})
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = getKeyBtn})
     CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = getKeyBtn})
     ApplyButtonEffects(getKeyBtn, currentTheme.CardBackground, currentTheme.Border)
 
+    -- Dynamic Text Color for Cyberpunk Theme Target Integration
+    local verifyTextColor = (selectedTheme == "Cyberpunk") and Color3.fromRGB(15, 15, 10) or Color3.fromRGB(255, 255, 255)
+
     local verifyBtn = CreateElement("TextButton", {
-        Text = "Verify Key", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Color3.fromRGB(255, 255, 255), -- Tetap putih agar kontras di accent merah
-        Position = UDim2.new(0.52, 0, 0, 0), Size = UDim2.new(0.48, 0, 1, 0), BackgroundColor3 = currentTheme.AccentPrimary, Parent = btnGrid
+        Text = "Verify Token", Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = verifyTextColor,
+        Position = UDim2.new(0.52, 0, 0, 0), Size = UDim2.new(0.48, 0, 1, 0), BackgroundColor3 = currentTheme.AccentPrimary, AutoButtonColor = false, Parent = btnGrid
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = verifyBtn})
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = verifyBtn})
     ApplyButtonEffects(verifyBtn, currentTheme.AccentPrimary, currentTheme.AccentSecondary)
 
-    -- Logic Connection
+    -- Functional Bindings
     getKeyBtn.MouseButton1Click:Connect(function()
         if setclipboard and self.GetKeyLink ~= "" then
             setclipboard(self.GetKeyLink)
-            self:Notify({Title = "Kitsune System", Content = "Link Key berhasil disalin ke clipboard!", Duration = 3})
+            self:Notify({Title = "Kitsune Security", Content = "URL Key bypass disalin ke clipboard!", Duration = 3})
         else
-            self:Notify({Title = "Kitsune System", Content = "Gagal menyalin link (Executor tidak mendukung clipboard).", Duration = 3})
+            self:Notify({Title = "Kitsune Security", Content = "Gagal menyalin (Fitur clipboard tidak didukung).", Duration = 3})
         end
     end)
 
     verifyBtn.MouseButton1Click:Connect(function()
         if textBox.Text == self.TargetKey then
-            self:Notify({Title = "Akses Diterima", Content = "Key Benar! Menjalankan script utama...", Duration = 3})
+            self:Notify({Title = "Sistem Terverifikasi", Content = "Token valid! Mengunduh dependensi script...", Duration = 3})
             
             if self.ScriptToRun ~= "" then
                 task.spawn(function()
@@ -236,13 +290,13 @@ function KitsuneKeyUI:CreateWindow(config)
             
             task.delay(1, function() self:DestroyUI() end)
         else
-            self:Notify({Title = "Akses Ditolak", Content = "Key salah atau kadaluwarsa! Silahkan coba lagi.", Duration = 4})
+            self:Notify({Title = "Validasi Gagal", Content = "Token salah! Ambil token baru via panel sebelah kiri.", Duration = 4})
         end
     end)
 
-    -- Entrance Scale Animation
-    TweenService:Create(self.MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 420, 0, 210),
+    -- Soft Material Easing Entrance
+    TweenService:Create(self.MainFrame, TweenInfo.new(0.45, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 410, 0, 215),
         BackgroundTransparency = 0
     }):Play()
     TweenService:Create(mainStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Transparency = 0}):Play()
@@ -254,20 +308,20 @@ end
 function KitsuneKeyUI:Notify(cfg)
     local currentTheme = self.Theme
     local card = CreateElement("Frame", {
-        Size = UDim2.new(1, 0, 0, 55), BackgroundColor3 = currentTheme.CardBackground, BackgroundTransparency = 1, Parent = self.NotificationContainer
+        Size = UDim2.new(1, 0, 0, 58), BackgroundColor3 = currentTheme.CardBackground, BackgroundTransparency = 1, Parent = self.NotificationContainer
     }, {
-        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8)}),
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 10)}),
         CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border}),
         CreateElement("Frame", {Size = UDim2.new(0, 4, 1, 0), BackgroundColor3 = currentTheme.AccentPrimary})
     })
 
     CreateElement("TextLabel", {
-        Text = cfg.Title or "Notification", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = currentTheme.TextPrimary,
-        Position = UDim2.new(0, 14, 0, 6), Size = UDim2.new(1, -20, 0, 16), BackgroundTransparency = 1, Parent = card
+        Text = cfg.Title or "Notification", Font = Enum.Font.GothamBold, TextSize = 12.5, TextColor3 = currentTheme.TextPrimary,
+        Position = UDim2.new(0, 16, 0, 8), Size = UDim2.new(1, -24, 0, 16), BackgroundTransparency = 1, Parent = card
     })
     CreateElement("TextLabel", {
         Text = cfg.Content or "", Font = Enum.Font.Gotham, TextSize = 11, TextColor3 = currentTheme.TextSecondary,
-        Position = UDim2.new(0, 14, 0, 22), Size = UDim2.new(1, -20, 0, 26), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
+        Position = UDim2.new(0, 16, 0, 24), Size = UDim2.new(1, -24, 0, 26), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, BackgroundTransparency = 1, Parent = card
     })
 
@@ -278,11 +332,10 @@ function KitsuneKeyUI:Notify(cfg)
     end)
 end
 
--- Safe Cleanup
 function KitsuneKeyUI:DestroyUI()
     if self.MainFrame then
-        local closeTween = TweenService:Create(self.MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 420, 0, 0),
+        local closeTween = TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 410, 0, 0),
             BackgroundTransparency = 1
         })
         closeTween:Play()
