@@ -17,14 +17,54 @@ local UI_NAME = "KitsuneMainUI_Instance"
 
 local Themes = {
     ["Dark Kitsune"] = {
-        Background = Color3.fromRGB(18, 18, 22),
-        CardBackground = Color3.fromRGB(26, 26, 32),
-        TabActive = Color3.fromRGB(38, 38, 46),
-        AccentPrimary = Color3.fromRGB(235, 35, 50),
-        AccentSecondary = Color3.fromRGB(150, 15, 25),
-        TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(180, 180, 190),
-        Border = Color3.fromRGB(45, 45, 55)
+        Background = Color3.fromRGB(18, 18, 22), CardBackground = Color3.fromRGB(26, 26, 32),
+        AccentPrimary = Color3.fromRGB(235, 35, 50), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 180, 190), Border = Color3.fromRGB(45, 45, 55)
+    },
+    ["Midnight Blue"] = {
+        Background = Color3.fromRGB(15, 20, 30), CardBackground = Color3.fromRGB(25, 30, 45),
+        AccentPrimary = Color3.fromRGB(50, 150, 255), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 190, 210), Border = Color3.fromRGB(40, 50, 70)
+    },
+    ["Emerald Forest"] = {
+        Background = Color3.fromRGB(15, 25, 15), CardBackground = Color3.fromRGB(25, 40, 25),
+        AccentPrimary = Color3.fromRGB(40, 200, 80), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 210, 180), Border = Color3.fromRGB(40, 60, 40)
+    },
+    ["Royal Purple"] = {
+        Background = Color3.fromRGB(20, 15, 30), CardBackground = Color3.fromRGB(35, 25, 50),
+        AccentPrimary = Color3.fromRGB(160, 80, 255), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(200, 180, 230), Border = Color3.fromRGB(55, 40, 80)
+    },
+    ["Sunset Orange"] = {
+        Background = Color3.fromRGB(30, 20, 15), CardBackground = Color3.fromRGB(50, 30, 20),
+        AccentPrimary = Color3.fromRGB(255, 120, 40), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(230, 200, 180), Border = Color3.fromRGB(80, 50, 30)
+    },
+    ["Cyber Pink"] = {
+        Background = Color3.fromRGB(25, 15, 25), CardBackground = Color3.fromRGB(40, 20, 40),
+        AccentPrimary = Color3.fromRGB(255, 40, 180), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(220, 180, 220), Border = Color3.fromRGB(60, 30, 60)
+    },
+    ["Ocean Teal"] = {
+        Background = Color3.fromRGB(15, 30, 30), CardBackground = Color3.fromRGB(20, 45, 45),
+        AccentPrimary = Color3.fromRGB(20, 200, 200), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 220, 220), Border = Color3.fromRGB(30, 60, 60)
+    },
+    ["Gold Luxe"] = {
+        Background = Color3.fromRGB(25, 25, 15), CardBackground = Color3.fromRGB(40, 40, 20),
+        AccentPrimary = Color3.fromRGB(255, 200, 50), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(220, 220, 180), Border = Color3.fromRGB(60, 60, 30)
+    },
+    ["Mono White"] = {
+        Background = Color3.fromRGB(240, 240, 240), CardBackground = Color3.fromRGB(220, 220, 220),
+        AccentPrimary = Color3.fromRGB(20, 20, 20), TextPrimary = Color3.fromRGB(20, 20, 20),
+        TextSecondary = Color3.fromRGB(80, 80, 80), Border = Color3.fromRGB(180, 180, 180)
+    },
+    ["Neon Abyss"] = {
+        Background = Color3.fromRGB(5, 5, 5), CardBackground = Color3.fromRGB(15, 15, 15),
+        AccentPrimary = Color3.fromRGB(0, 255, 255), TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(150, 150, 150), Border = Color3.fromRGB(30, 30, 30)
     }
 }
 
