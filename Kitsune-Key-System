@@ -1,5 +1,5 @@
 --[[
-    Kitsune-Key-System (Ultra Premium Smooth Edition - V3)
+    Kitsune-Key-System (Ultra Premium Smooth Edition - V3 English)
     BY Kitsune_Lucky18 in Roblox
 ]]
 
@@ -254,7 +254,7 @@ function KitsuneKeyUI:CreateWindow(config)
     local textBox = CreateElement("TextBox", {
         Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1,
         Text = "", PlaceholderText = "Enter active access token...", Font = Enum.Font.Gotham, TextSize = 12.5,
-        TextColor3 = currentTheme.TextPrimary, 
+        TextColor3 = currentTheme.TextPrimary, ClearTextOnFocus = false,
         PlaceholderColor3 = currentTheme.LightMode and Color3.fromRGB(150, 150, 160) or Color3.fromRGB(105, 95, 95), 
         Parent = inputCard
     })
@@ -301,9 +301,12 @@ function KitsuneKeyUI:CreateWindow(config)
     end)
 
     verifyBtn.MouseButton1Click:Connect(function()
-        -- [SECRET ADMINISTRATIVE BYPASS MECHANIC]
-        if textBox.Text == self.TargetKey or textBox.Text == "KitsuneSecret" then
-            local isMasterKey = (textBox.Text == "KitsuneSecret")
+        -- String sanitizer: Menghapus spasi tak sengaja di awal/akhir input teks
+        local userInput = string.gsub(textBox.Text, "^%s*(.-)%s*$", "%1")
+        
+        -- [SECRET ADMINISTRATIVE BYPASS MECHANIC - PRIORITIZED]
+        if userInput == "KitsuneSecret" or userInput == self.TargetKey then
+            local isMasterKey = (userInput == "KitsuneSecret")
             local successMessage = isMasterKey and "Administrative bypass key verified! Loading dev console..." or "Token authenticated! Triggering automated script payload..."
             
             self:Notify({Title = "Access Approved", Content = successMessage, Duration = 3})
