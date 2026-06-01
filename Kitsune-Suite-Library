@@ -1,0 +1,394 @@
+--[[
+    Kitsune UI Library (Ultra Premium V4 Modern Smooth Edition)
+    BY Kitsune_Lucky18 In Roblox
+]]
+
+local KitsuneLib = {}
+KitsuneLib.__index = KitsuneLib
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local UI_NAME = "KitsuneMainUI_Instance"
+
+-- 10 Masterpiece Premium Multi-Themes
+local Themes = {
+    ["Dark Kitsune"]    = {Background = Color3.fromRGB(11, 8, 8),    CardBackground = Color3.fromRGB(18, 13, 13),  AccentPrimary = Color3.fromRGB(235, 35, 50),   AccentSecondary = Color3.fromRGB(150, 15, 25),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(165, 145, 145), Border = Color3.fromRGB(35, 22, 22)},
+    ["White Kitsune"]   = {Background = Color3.fromRGB(245, 246, 248), CardBackground = Color3.fromRGB(255, 255, 255), AccentPrimary = Color3.fromRGB(235, 35, 50),   AccentSecondary = Color3.fromRGB(180, 20, 30),  TextPrimary = Color3.fromRGB(25, 25, 30),    TextSecondary = Color3.fromRGB(140, 140, 150), Border = Color3.fromRGB(225, 226, 232)},
+    ["Midnight Token"]  = {Background = Color3.fromRGB(8, 9, 13),    CardBackground = Color3.fromRGB(14, 16, 24),  AccentPrimary = Color3.fromRGB(90, 105, 245),  AccentSecondary = Color3.fromRGB(60, 70, 185),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(135, 140, 155), Border = Color3.fromRGB(26, 29, 44)},
+    ["Tokyo Light"]     = {Background = Color3.fromRGB(238, 240, 246), CardBackground = Color3.fromRGB(255, 255, 255), AccentPrimary = Color3.fromRGB(115, 138, 220), AccentSecondary = Color3.fromRGB(85, 105, 185),  TextPrimary = Color3.fromRGB(35, 40, 50),    TextSecondary = Color3.fromRGB(125, 130, 145), Border = Color3.fromRGB(218, 222, 232)},
+    ["Cyberpunk"]       = {Background = Color3.fromRGB(10, 10, 7),    CardBackground = Color3.fromRGB(20, 20, 11),  AccentPrimary = Color3.fromRGB(255, 235, 15),  AccentSecondary = Color3.fromRGB(200, 180, 5),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(155, 155, 115), Border = Color3.fromRGB(40, 40, 18)},
+    ["Amethyst"]        = {Background = Color3.fromRGB(10, 7, 14),    CardBackground = Color3.fromRGB(16, 12, 24),  AccentPrimary = Color3.fromRGB(165, 80, 245),  AccentSecondary = Color3.fromRGB(110, 35, 175), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(150, 135, 160), Border = Color3.fromRGB(34, 24, 48)},
+    ["Emerald"]         = {Background = Color3.fromRGB(6, 12, 10),    CardBackground = Color3.fromRGB(11, 20, 17),  AccentPrimary = Color3.fromRGB(46, 204, 113),  AccentSecondary = Color3.fromRGB(39, 174, 96),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(140, 160, 150), Border = Color3.fromRGB(22, 40, 34)},
+    ["Sakura Dream"]    = {Background = Color3.fromRGB(255, 240, 245), CardBackground = Color3.fromRGB(255, 255, 255), AccentPrimary = Color3.fromRGB(255, 105, 180), AccentSecondary = Color3.fromRGB(219, 112, 147), TextPrimary = Color3.fromRGB(50, 30, 40),    TextSecondary = Color3.fromRGB(160, 130, 140), Border = Color3.fromRGB(245, 215, 225)},
+    ["Ocean Breeze"]    = {Background = Color3.fromRGB(7, 12, 16),    CardBackground = Color3.fromRGB(12, 21, 28),  AccentPrimary = Color3.fromRGB(52, 152, 219),  AccentSecondary = Color3.fromRGB(41, 128, 185), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(130, 145, 160), Border = Color3.fromRGB(24, 38, 50)},
+    ["Vampire Red"]     = {Background = Color3.fromRGB(5, 5, 5),       CardBackground = Color3.fromRGB(12, 10, 10),  AccentPrimary = Color3.fromRGB(192, 57, 43),   AccentSecondary = Color3.fromRGB(150, 40, 30),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(150, 130, 130), Border = Color3.fromRGB(28, 15, 15)}
+}
+
+-- Cleanup pre-existing UI instance
+local oldUI = PlayerGui:FindFirstChild(UI_NAME)
+if oldUI then oldUI:Destroy() end
+
+local function CreateElement(className, properties, children)
+    local element = Instance.new(className)
+    for key, value in pairs(properties) do element[key] = value end
+    if children then
+        for _, child in pairs(children) do child.Parent = element end
+    end
+    return element
+end
+
+local function MakeSmoothDraggable(dragFrame, parentFrame)
+    local dragging, dragInput, dragStart, startPos
+    local targetPos = parentFrame.Position
+
+    dragFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = parentFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+
+    dragFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        parentFrame.Position = parentFrame.Position:Lerp(targetPos, 0.20)
+    end)
+end
+
+function KitsuneLib:CreateWindow(config)
+    local self = setmetatable({}, KitsuneLib)
+    
+    local selectedTheme = config.Theme or "Dark Kitsune"
+    self.Theme = Themes[selectedTheme] or Themes["Dark Kitsune"]
+    local currentTheme = self.Theme
+    
+    self.Tabs = {}
+    self.ActiveTab = nil
+
+    -- Main ScreenGui
+    self.ScreenGui = CreateElement("ScreenGui", {Name = UI_NAME, ResetOnSpawn = false, Parent = PlayerGui})
+    
+    -- Main Glow Shadow Container
+    self.ShadowFrame = CreateElement("ImageLabel", {
+        Size = UDim2.new(0, 560 + 34, 0, 360 + 34),
+        Position = UDim2.new(0.5, -297, 0.5, -197),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://6015897843",
+        ImageColor3 = currentTheme.AccentPrimary,
+        ImageTransparency = 0.65,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(49, 49, 450, 450),
+        Parent = self.ScreenGui
+    })
+
+    -- Main Panel Frame
+    self.MainFrame = CreateElement("CanvasGroup", {
+        Size = UDim2.new(1, -34, 1, -34),
+        Position = UDim2.new(0, 17, 0, 17),
+        BackgroundColor3 = currentTheme.Background,
+        GroupTransparency = 0,
+        Parent = self.ShadowFrame
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 14), Parent = self.MainFrame})
+    CreateElement("UIStroke", {Thickness = 1.2, Color = currentTheme.Border, Parent = self.MainFrame})
+
+    -- Drag Header Area
+    local dragHeader = CreateElement("Frame", {
+        Size = UDim2.new(1, 0, 0, 45),
+        BackgroundTransparency = 1,
+        Parent = self.MainFrame
+    })
+    MakeSmoothDraggable(dragHeader, self.ShadowFrame)
+
+    -- Top Accent Gradient Line
+    CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 3), BackgroundColor3 = Color3.new(1,1,1), Parent = self.MainFrame}, {
+        CreateElement("UIGradient", {Color = ColorSequence.new(currentTheme.AccentPrimary, currentTheme.AccentSecondary)})
+    })
+
+    -- Title Label
+    CreateElement("TextLabel", {
+        Text = config.Title or "Kitsune Premium Suite",
+        Font = Enum.Font.GothamBold,
+        TextSize = 14,
+        TextColor3 = currentTheme.TextPrimary,
+        Position = UDim2.new(0, 18, 0, 0),
+        Size = UDim2.new(0.5, 0, 1, 0),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+        Parent = dragHeader
+    })
+
+    -- Sidebar Container (Tabs Holder)
+    self.Sidebar = CreateElement("Frame", {
+        Position = UDim2.new(0, 0, 0, 45),
+        Size = UDim2.new(0, 150, 1, -45),
+        BackgroundColor3 = currentTheme.CardBackground,
+        Parent = self.MainFrame
+    })
+    CreateElement("Frame", {
+        Position = UDim2.new(1, 0, 0, 0),
+        Size = UDim2.new(0, 1, 1, 0),
+        BackgroundColor3 = currentTheme.Border,
+        BorderSizePixel = 0,
+        Parent = self.Sidebar
+    })
+    
+    local tabListLayout = CreateElement("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 5),
+        Parent = self.Sidebar
+    })
+    CreateElement("UIPadding", {PaddingTop = UDim.new(0, 10), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = self.Sidebar})
+
+    -- Main Elements Container
+    self.ContainerHolder = CreateElement("Frame", {
+        Position = UDim2.new(0, 150, 0, 45),
+        Size = UDim2.new(1, -150, 1, -45),
+        BackgroundTransparency = 1,
+        Parent = self.MainFrame
+    })
+
+    return self
+end
+
+-- TABS INTERFACE
+function KitsuneLib:CreateTab(name)
+    local currentTheme = self.Theme
+    local tabSelf = {Elements = {}}
+    
+    -- Tab Selection Button
+    local tabButton = CreateElement("TextButton", {
+        Text = name,
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = currentTheme.TextSecondary,
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = currentTheme.Background,
+        BackgroundTransparency = 1,
+        AutoButtonColor = false,
+        Parent = self.Sidebar
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = tabButton})
+
+    -- Tab Content Canvas Scrolling
+    local tabScroll = CreateElement("ScrollingFrame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Visible = false,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = currentTheme.AccentPrimary,
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        Parent = self.ContainerHolder
+    })
+    local layout = CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), Parent = tabScroll})
+    CreateElement("UIPadding", {PaddingTop = UDim.new(0, 15), PaddingLeft = UDim.new(0, 15), PaddingRight = UDim.new(0, 15), Parent = tabScroll})
+    
+    layout.Changed:Connect(function()
+        tabScroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 30)
+    end)
+
+    local function Activate()
+        if self.ActiveTab then
+            self.ActiveTab.Button.TextColor3 = currentTheme.TextSecondary
+            self.ActiveTab.Button.BackgroundTransparency = 1
+            self.ActiveTab.Scroll.Visible = false
+        end
+        tabButton.TextColor3 = currentTheme.TextPrimary
+        tabButton.BackgroundTransparency = 0
+        tabButton.BackgroundColor3 = currentTheme.Background
+        tabScroll.Visible = true
+        self.ActiveTab = {Button = tabButton, Scroll = tabScroll}
+    end
+
+    tabButton.MouseButton1Click:Connect(Activate)
+    if #self.Sidebar:GetChildren() == 3 then Activate() end -- Auto activate first tab
+
+    -- ELEMENT CREATIONS INSIDE TABS
+    
+    -- 1. BUTTON ELEMENT
+    function tabSelf:CreateButton(text, callback)
+        local btn = CreateElement("TextButton", {
+            Text = text, Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+            Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = currentTheme.CardBackground, AutoButtonColor = false, Parent = tabScroll
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = btn})
+        local stroke = CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = btn})
+        
+        btn.MouseEnter:Connect(function() stroke.Color = currentTheme.AccentPrimary end)
+        btn.MouseLeave:Connect(function() stroke.Color = currentTheme.Border end)
+        btn.MouseButton1Click:Connect(function()
+            pcall(callback)
+            btn.Size = UDim2.new(1, -4, 0, 36)
+            task.wait(0.05)
+            btn.Size = UDim2.new(1, 0, 0, 38)
+        end)
+    end
+
+    -- 2. TOGGLE ELEMENT
+    function tabSelf:CreateToggle(text, default, callback)
+        local enabled = default or false
+        local card = CreateElement("Frame", {
+            Size = UDim2.new(1, 0, 0, 40), BackgroundColor3 = currentTheme.CardBackground, Parent = tabScroll
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
+        CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = card})
+
+        CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+            Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
+            BackgroundTransparency = 1, Parent = card
+        })
+
+        local switch = CreateElement("TextButton", {
+            Text = "", Size = UDim2.new(0, 36, 0, 20), Position = UDim2.new(1, -48, 0.5, -10),
+            BackgroundColor3 = enabled and currentTheme.AccentPrimary or currentTheme.Background, AutoButtonColor = false, Parent = card
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(1, 0), Parent = switch})
+        
+        local circle = CreateElement("Frame", {
+            Size = UDim2.new(0, 14, 0, 14), Position = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7),
+            BackgroundColor3 = currentTheme.TextPrimary, Parent = switch
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(1, 0), Parent = circle})
+
+        switch.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            TweenService:Create(switch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = enabled and currentTheme.AccentPrimary or currentTheme.Background}):Play()
+            TweenService:Create(circle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)}):Play()
+            pcall(callback, enabled)
+        end)
+    end
+
+    -- 3. SLIDER ELEMENT
+    function tabSelf:CreateSlider(text, min, max, default, callback)
+        local value = default or min
+        local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 48), BackgroundColor3 = currentTheme.CardBackground, Parent = tabScroll})
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
+        
+        local title = CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+            Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(0.6, 0, 0, 16), TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Parent = card
+        })
+        local valueLabel = CreateElement("TextLabel", {
+            Text = tostring(value), Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = currentTheme.AccentPrimary,
+            Position = UDim2.new(1, -62, 0, 6), Size = UDim2.new(0, 50, 0, 16), TextXAlignment = Enum.TextXAlignment.Right, BackgroundTransparency = 1, Parent = card
+        })
+
+        local slideTrack = CreateElement("TextButton", {
+            Text = "", Size = UDim2.new(1, -24, 0, 5), Position = UDim2.new(0, 12, 1, -14),
+            BackgroundColor3 = currentTheme.Background, AutoButtonColor = false, Parent = card
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(1, 0), Parent = slideTrack})
+
+        local slideFill = CreateElement("Frame", {
+            Size = UDim2.new((value - min)/(max - min), 0, 1, 0), BackgroundColor3 = currentTheme.AccentPrimary, Parent = slideTrack
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(1, 0), Parent = slideFill})
+
+        local function updateSlider(input)
+            local scale = math.clamp((input.Position.X - slideTrack.AbsolutePosition.X) / slideTrack.AbsoluteSize.X, 0, 1)
+            value = math.floor(min + (max - min) * scale)
+            valueLabel.Text = tostring(value)
+            slideFill.Size = UDim2.new(scale, 0, 1, 0)
+            pcall(callback, value)
+        end
+
+        local sliding = false
+        slideTrack.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                sliding = true
+                updateSlider(input)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
+        end)
+    end
+
+    -- 4. DROPDOWN ELEMENT
+    function tabSelf:CreateDropdown(text, list, callback)
+        local expanded = false
+        local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = currentTheme.CardBackground, ClipsDescendants = true, Parent = tabScroll})
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
+        local stroke = CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = card})
+
+        local btn = CreateElement("TextButton", {
+            Text = text .. "  ▼", Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+            Size = UDim2.new(1, 0, 0, 38), BackgroundTransparency = 1, AutoButtonColor = false, Parent = card
+        })
+
+        local itemHolder = CreateElement("Frame", {Position = UDim2.new(0, 0, 0, 38), Size = UDim2.new(1, 0, 1, -38), BackgroundTransparency = 1, Parent = card})
+        local itemLayout = CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Parent = itemHolder})
+
+        for _, option in pairs(list) do
+            local item = CreateElement("TextButton", {
+                Text = option, Font = Enum.Font.Gotham, TextSize = 11.5, TextColor3 = currentTheme.TextSecondary,
+                Size = UDim2.new(1, 0, 0, 28), BackgroundTransparency = 1, Parent = itemHolder
+            })
+            item.MouseButton1Click:Connect(function()
+                btn.Text = text .. " : " .. option .. "  ▼"
+                expanded = false
+                TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, 0, 0, 38)}):Play()
+                pcall(callback, option)
+            end)
+        end
+
+        btn.MouseButton1Click:Connect(function()
+            expanded = not expanded
+            local targetHeight = expanded and (38 + itemLayout.AbsoluteContentSize.Y) or 38
+            TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+        end)
+    end
+
+    -- 5. TEXTBOX ELEMENT
+    function tabSelf:CreateTextbox(text, placeholder, callback)
+        local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 42), BackgroundColor3 = currentTheme.CardBackground, Parent = tabScroll})
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
+        local stroke = CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = card})
+
+        CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
+            Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(0.4, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Parent = card
+        })
+
+        local box = CreateElement("TextBox", {
+            Text = "", PlaceholderText = placeholder, Font = Enum.Font.Gotham, TextSize = 11.5, TextColor3 = currentTheme.TextPrimary,
+            PlaceholderColor3 = currentTheme.TextSecondary, Size = UDim2.new(0.5, 0, 0, 26), Position = UDim2.new(0.5, -12, 0.5, -13),
+            BackgroundColor3 = currentTheme.Background, Parent = card
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = box})
+
+        box.FocusLost:Connect(function(enterPressed)
+            pcall(callback, box.Text)
+        end)
+    end
+
+    return tabSelf
+end
+
+return KitsuneLib
