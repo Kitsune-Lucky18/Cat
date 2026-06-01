@@ -1,5 +1,7 @@
 --[[
-BY Kitsune_Lucky18 on Roblo
+    Kitsune UI Library (V7 Ultimate Ultra-Premium Edition)
+    FIXED: Real UICorners on all elements, High-Contrast Sidebar Tabs,
+           Smooth Draggable Window, Minimize/Close Controls, Keyboard Toggle.
 ]]
 
 local KitsuneLib = {}
