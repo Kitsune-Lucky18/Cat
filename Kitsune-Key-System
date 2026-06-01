@@ -1,0 +1,111 @@
+--// KITSUNE UI LIB (CORE + WINDOW SYSTEM)
+local Kitsune = {}
+
+--========================
+-- SERVICES
+--========================
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+
+--========================
+-- CORE TABLE
+--========================
+Kitsune.Windows = {}
+
+--========================
+-- SAFE GUI CLEANUP
+--========================
+local function removeOldGui()
+    pcall(function()
+        if CoreGui:FindFirstChild("KitsuneUI") then
+            CoreGui.KitsuneUI:Destroy()
+        end
+    end)
+end
+
+removeOldGui()
+
+--========================
+-- CREATE WINDOW FUNCTION (INI INTI NYA)
+--========================
+function Kitsune:CreateWindow(config)
+    config = config or {}
+    
+    local Title = config.Title or "Kitsune Hub"
+    
+    -- GUI ROOT
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "KitsuneUI"
+    ScreenGui.Parent = CoreGui
+    ScreenGui.ResetOnSpawn = false
+
+    -- MAIN FRAME
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0, 400, 0, 250)
+    Main.Position = UDim2.new(0.5, -200, 0.5, -125)
+    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Main.Parent = ScreenGui
+
+    Instance.new("UICorner", Main)
+
+    -- TITLE
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1,0,0,50)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = Title
+    TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextScaled = true
+    TitleLabel.Parent = Main
+
+    -- WINDOW OBJECT (RETURN INI BIAR BISA DIPAKAI LAGI)
+    local Window = {}
+
+    --========================
+    -- CREATE TAB FUNCTION
+    --========================
+    function Window:CreateTab(tabName)
+        local Tab = Instance.new("Frame")
+        Tab.Size = UDim2.new(1, -20, 1, -60)
+        Tab.Position = UDim2.new(0, 10, 0, 55)
+        Tab.BackgroundColor3 = Color3.fromRGB(35,35,35)
+        Tab.Visible = false
+        Tab.Parent = Main
+
+        Instance.new("UICorner", Tab)
+
+        local TabLabel = Instance.new("TextLabel")
+        TabLabel.Size = UDim2.new(1,0,0,30)
+        TabLabel.BackgroundTransparency = 1
+        TabLabel.Text = tabName
+        TabLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        TabLabel.Parent = Tab
+
+        return Tab
+    end
+
+    --========================
+    -- NOTIFY FUNCTION
+    --========================
+    function Window:Notify(text)
+        local notif = Instance.new("TextLabel")
+        notif.Size = UDim2.new(0,200,0,40)
+        notif.Position = UDim2.new(0.5,-100,0,20)
+        notif.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        notif.Text = text
+        notif.TextColor3 = Color3.fromRGB(255,255,255)
+        notif.Parent = ScreenGui
+
+        task.delay(2, function()
+            notif:Destroy()
+        end)
+    end
+
+    -- SAVE WINDOW
+    table.insert(Kitsune.Windows, Window)
+
+    return Window
+end
+
+return Kitsune
