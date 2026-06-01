@@ -1,111 +1,443 @@
---// KITSUNE UI LIB (CORE + WINDOW SYSTEM)
-local Kitsune = {}
+--[[
+    Kitsune-Key-System (Universal UI Hub Library)
+    Theme: Kitsune (Deep Red, Crimson, Dark Red, White Text)
+    Features: Modern UI, Draggable, Key System, Tabs, Buttons, Toggles, Sliders, Labels, Notifications.
+]]
 
---========================
--- SERVICES
---========================
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local KitsuneLibrary = {}
+KitsuneLibrary.__index = KitsuneLibrary
+
+-- Services
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 
---========================
--- CORE TABLE
---========================
-Kitsune.Windows = {}
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
---========================
--- SAFE GUI CLEANUP
---========================
-local function removeOldGui()
-    pcall(function()
-        if CoreGui:FindFirstChild("KitsuneUI") then
-            CoreGui.KitsuneUI:Destroy()
+local UI_NAME = "KitsuneHub_Instance"
+local STORAGE_KEY = "KitsuneHub_KeySave"
+
+-- Theme Setup
+local Theme = {
+    Background = Color3.fromRGB(15, 10, 10),
+    CardBackground = Color3.fromRGB(25, 15, 15),
+    AccentPrimary = Color3.fromRGB(180, 20, 30),
+    AccentSecondary = Color3.fromRGB(120, 10, 20),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(180, 160, 160),
+    Border = Color3.fromRGB(45, 25, 25),
+}
+
+-- Anti Duplicate
+local oldUI = PlayerGui:FindFirstChild(UI_NAME)
+if oldUI then oldUI:Destroy() end
+
+-- Helper Function to Create Elements
+local function CreateElement(className, properties, children)
+    local element = Instance.new(className)
+    for key, value in pairs(properties) do
+        element[key] = value
+    end
+    if children then
+        for _, child in pairs(children) do
+            child.Parent = element
+        end
+    end
+    return element
+end
+
+-- Draggable Script
+local function MakeDraggable(dragFrame, parentFrame)
+    local dragging, dragInput, dragStart, startPos
+    dragFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = parentFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    dragFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            TweenService:Create(parentFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            }):Play()
         end
     end)
 end
 
-removeOldGui()
-
---========================
--- CREATE WINDOW FUNCTION (INI INTI NYA)
---========================
-function Kitsune:CreateWindow(config)
-    config = config or {}
-    
-    local Title = config.Title or "Kitsune Hub"
-    
-    -- GUI ROOT
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "KitsuneUI"
-    ScreenGui.Parent = CoreGui
-    ScreenGui.ResetOnSpawn = false
-
-    -- MAIN FRAME
-    local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0, 400, 0, 250)
-    Main.Position = UDim2.new(0.5, -200, 0.5, -125)
-    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Main.Parent = ScreenGui
-
-    Instance.new("UICorner", Main)
-
-    -- TITLE
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1,0,0,50)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = Title
-    TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextScaled = true
-    TitleLabel.Parent = Main
-
-    -- WINDOW OBJECT (RETURN INI BIAR BISA DIPAKAI LAGI)
-    local Window = {}
-
-    --========================
-    -- CREATE TAB FUNCTION
-    --========================
-    function Window:CreateTab(tabName)
-        local Tab = Instance.new("Frame")
-        Tab.Size = UDim2.new(1, -20, 1, -60)
-        Tab.Position = UDim2.new(0, 10, 0, 55)
-        Tab.BackgroundColor3 = Color3.fromRGB(35,35,35)
-        Tab.Visible = false
-        Tab.Parent = Main
-
-        Instance.new("UICorner", Tab)
-
-        local TabLabel = Instance.new("TextLabel")
-        TabLabel.Size = UDim2.new(1,0,0,30)
-        TabLabel.BackgroundTransparency = 1
-        TabLabel.Text = tabName
-        TabLabel.TextColor3 = Color3.fromRGB(255,255,255)
-        TabLabel.Parent = Tab
-
-        return Tab
-    end
-
-    --========================
-    -- NOTIFY FUNCTION
-    --========================
-    function Window:Notify(text)
-        local notif = Instance.new("TextLabel")
-        notif.Size = UDim2.new(0,200,0,40)
-        notif.Position = UDim2.new(0.5,-100,0,20)
-        notif.BackgroundColor3 = Color3.fromRGB(0,0,0)
-        notif.Text = text
-        notif.TextColor3 = Color3.fromRGB(255,255,255)
-        notif.Parent = ScreenGui
-
-        task.delay(2, function()
-            notif:Destroy()
-        end)
-    end
-
-    -- SAVE WINDOW
-    table.insert(Kitsune.Windows, Window)
-
-    return Window
+-- Hover Effect
+local function ApplyHover(frame, normalColor, hoverColor)
+    frame.MouseEnter:Connect(function()
+        TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = hoverColor}):Play()
+    end)
+    frame.MouseLeave:Connect(function()
+        TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = normalColor}):Play()
+    end)
 end
 
-return Kitsune
+-- Create Main Window
+function KitsuneLibrary:CreateWindow(config)
+    local self = setmetatable({}, KitsuneLibrary)
+    
+    self.Title = config.Title or "Kitsune Hub"
+    self.Key = config.Key or ""
+    self.OnSuccess = config.OnSuccess or function() end
+    self.Connections = {}
+    self.Tabs = {}
+    self.IsKeyVerified = (self.Key == "") -- Jika key kosong, langsung buka bypass
+
+    -- Main ScreenGui
+    self.ScreenGui = CreateElement("ScreenGui", {
+        Name = UI_NAME,
+        ResetOnSpawn = false,
+        Parent = PlayerGui
+    })
+
+    -- Notification Holder
+    self.NotificationLayout = CreateElement("Frame", {
+        Size = UDim2.new(0, 300, 1, -40),
+        Position = UDim2.new(1, -320, 0, 20),
+        BackgroundTransparency = 1,
+        Parent = self.ScreenGui
+    }, {
+        CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10), VerticalAlignment = Enum.VerticalAlignment.Bottom})
+    })
+
+    -- Build Main Frame (Hub Window)
+    self.MainFrame = CreateElement("Frame", {
+        Size = UDim2.new(0, 520, 0, 340),
+        Position = UDim2.new(0.5, -260, 0.5, -170),
+        BackgroundColor3 = Theme.Background,
+        BorderSizePixel = 0,
+        Visible = false, -- Sembunyikan sampai Key sukses
+        Parent = self.ScreenGui
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = self.MainFrame})
+    CreateElement("UIStroke", {Thickness = 1.2, Color = Theme.Border, Parent = self.MainFrame})
+
+    -- Top Bar Glow Gradient
+    local glow = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 3), BackgroundColor3 = Color3.new(1,1,1), Parent = self.MainFrame}, {
+        CreateElement("UIGradient", {Color = ColorSequence.new(Theme.AccentPrimary, Theme.AccentSecondary)})
+    })
+
+    -- Header / Drag Bar
+    self.Header = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Parent = self.MainFrame})
+    MakeDraggable(self.Header, self.MainFrame)
+
+    CreateElement("TextLabel", {
+        Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Theme.TextPrimary,
+        Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(0.5, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1, Parent = self.Header
+    })
+
+    -- Sembunyikan UI Bind (Tombol RightControl / sesuai keinginan)
+    local uiToggled = true
+    table.insert(self.Connections, UserInputService.InputBegan:Connect(function(input, gpe)
+        if not gpe and input.KeyCode == Enum.KeyCode.RightControl then
+            uiToggled = not uiToggled
+            self.MainFrame.Visible = uiToggled and self.IsKeyVerified
+        end
+    end))
+
+    -- Navigation Tab Sidebar
+    self.Sidebar = CreateElement("Frame", {
+        Position = UDim2.new(0, 10, 0, 45), Size = UDim2.new(0, 130, 1, -55),
+        BackgroundColor3 = Theme.CardBackground, Parent = self.MainFrame
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = self.Sidebar})
+    CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border, Parent = self.Sidebar})
+
+    self.TabListLayout = CreateElement("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5), Parent = self.Sidebar
+    })
+    CreateElement("UIPadding", {PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5), PaddingTop = UDim.new(0, 5), Parent = self.Sidebar})
+
+    -- Container Tempat Isi Fitur / Pages
+    self.ContainerHolder = CreateElement("Frame", {
+        Position = UDim2.new(0, 150, 0, 45), Size = UDim2.new(1, -160, 1, -55),
+        BackgroundTransparency = 1, Parent = self.MainFrame
+    })
+
+    -- BUILD KEY SYSTEM WINDOW (Jika Key diisi di config)
+    if not self.IsKeyVerified then
+        self:BuildKeySystem(config.GetKeyLink or "")
+    else
+        self.MainFrame.Visible = true
+        self.OnSuccess()
+    end
+
+    return self
+end
+
+-- Notification System
+function KitsuneLibrary:Notify(cfg)
+    local item = CreateElement("Frame", {
+        Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = Theme.CardBackground, BackgroundTransparency = 1, Parent = self.NotificationLayout
+    }, {
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 8)}),
+        CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border}),
+        CreateElement("Frame", {Size = UDim2.new(0, 4, 1, 0), BackgroundColor3 = Theme.AccentPrimary})
+    })
+
+    CreateElement("TextLabel", {
+        Text = cfg.Title or "Notification", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.TextPrimary,
+        Position = UDim2.new(0, 12, 0, 8), Size = UDim2.new(1, -20, 0, 15), BackgroundTransparency = 1, Parent = item
+    })
+    CreateElement("TextLabel", {
+        Text = cfg.Content or "", Font = Enum.Font.Gotham, TextSize = 11, TextColor3 = Theme.TextSecondary,
+        Position = UDim2.new(0, 12, 0, 25), Size = UDim2.new(1, -20, 0, 30), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top, BackgroundTransparency = 1, Parent = item
+    })
+
+    TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    task.delay(cfg.Duration or 4, function()
+        local t = TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,0)})
+        t:Play() t.Completed:Connect(function() item:Destroy() end)
+    end)
+end
+
+-- Key System Window Generator
+function KitsuneLibrary:BuildKeySystem(getkeylink)
+    local keyWindow = CreateElement("Frame", {
+        Size = UDim2.new(0, 360, 0, 220), Position = UDim2.new(0.5, -180, 0.5, -110),
+        BackgroundColor3 = Theme.Background, Parent = self.ScreenGui
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = keyWindow})
+    CreateElement("UIStroke", {Thickness = 1.2, Color = Theme.Border, Parent = keyWindow})
+
+    CreateElement("TextLabel", {
+        Text = "Key Verification", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Theme.TextPrimary,
+        Position = UDim2.new(0, 0, 0, 15), Size = UDim2.new(1, 0, 0, 25), BackgroundTransparency = 1, Parent = keyWindow
+    })
+
+    local boxContainer = CreateElement("Frame", {
+        Position = UDim2.new(0, 20, 0, 65), Size = UDim2.new(1, -40, 0, 40),
+        BackgroundColor3 = Theme.CardBackground, Parent = keyWindow
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = boxContainer})
+    CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border, Parent = boxContainer})
+
+    local tx = CreateElement("TextBox", {
+        Size = UDim2.new(1, -20, 1, 0), Position = UDim2.new(0, 10, 0, 0), BackgroundTransparency = 1,
+        Text = "", PlaceholderText = "Masukkan Key Disini...", Font = Enum.Font.Gotham, TextSize = 13,
+        TextColor3 = Theme.TextPrimary, Parent = boxContainer
+    })
+
+    -- Buttons
+    local gkBtn = CreateElement("TextButton", {
+        Text = "Get Key", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.TextPrimary,
+        Position = UDim2.new(0, 20, 0, 125), Size = UDim2.new(0, 145, 0, 38), BackgroundColor3 = Theme.CardBackground, Parent = keyWindow
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = gkBtn})
+    ApplyHover(gkBtn, Theme.CardBackground, Theme.Border)
+
+    local checkBtn = CreateElement("TextButton", {
+        Text = "Verify Key", Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.TextPrimary,
+        Position = UDim2.new(1, -165, 0, 125), Size = UDim2.new(0, 145, 0, 38), BackgroundColor3 = Theme.AccentPrimary, Parent = keyWindow
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = checkBtn})
+    ApplyHover(checkBtn, Theme.AccentPrimary, Theme.AccentSecondary)
+
+    -- Logic
+    gkBtn.MouseButton1Click:Connect(function()
+        if setclipboard then setclipboard(getkeylink) end
+        self:Notify({Title = "System", Content = "Link Key disalin ke clipboard!", Duration = 3})
+    end)
+
+    checkBtn.MouseButton1Click:Connect(function()
+        if tx.Text == self.Key then
+            self:Notify({Title = "Verified", Content = "Key Benar! Membuka UI...", Duration = 3})
+            self.IsKeyVerified = true
+            keyWindow:Destroy()
+            self.MainFrame.Visible = true
+            self.OnSuccess()
+        else
+            self:Notify({Title = "Error", Content = "Key yang kamu masukkan salah!", Duration = 3})
+        end
+    end)
+end
+
+-- Create Tabs
+function KitsuneLibrary:CreateTab(name)
+    local tabSelf = {}
+    
+    local page = CreateElement("ScrollingFrame", {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, CanvasSize = UDim2.new(0,0,0,0),
+        ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.AccentPrimary, Visible = false, Parent = self.ContainerHolder
+    })
+    CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6), Parent = page})
+    CreateElement("UIPadding", {PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 2), Parent = page})
+
+    local tabButton = CreateElement("TextButton", {
+        Text = name, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.TextSecondary,
+        Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = Color3.fromRGB(0,0,0), BackgroundTransparency = 1, Parent = self.Sidebar
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = tabButton})
+
+    -- Auto select tab pertama jika belum ada yang aktif
+    if #self.Tabs == 0 then
+        page.Visible = true
+        tabButton.BackgroundColor3 = Theme.AccentPrimary
+        tabButton.BackgroundTransparency = 0
+        tabButton.TextColor3 = Theme.TextPrimary
+    end
+
+    tabButton.MouseButton1Click:Connect(function()
+        for _, t in pairs(self.Tabs) do
+            t.Page.Visible = false
+            t.Btn.BackgroundTransparency = 1
+            t.Btn.TextColor3 = Theme.TextSecondary
+        end
+        page.Visible = true
+        tabButton.BackgroundTransparency = 0
+        tabButton.BackgroundColor3 = Theme.AccentPrimary
+        tabButton.TextColor3 = Theme.TextPrimary
+    end)
+
+    table.insert(self.Tabs, {Page = page, Btn = tabButton})
+
+    -- COMPONENT CREATIONS INSIDE TABS
+    
+    -- 1. Create Button Component
+    function tabSelf:CreateButton(text, callback)
+        callback = callback or function() end
+        local btn = CreateElement("TextButton", {
+            Text = text, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.TextPrimary,
+            Size = UDim2.new(1, 0, 0, 36), BackgroundColor3 = Theme.CardBackground, Parent = page
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = btn})
+        CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border, Parent = btn})
+        ApplyHover(btn, Theme.CardBackground, Theme.Border)
+        
+        btn.MouseButton1Click:Connect(callback)
+        page.CanvasSize = UDim2.new(0, 0, 0, page.UIListLayout.AbsoluteContentSize.Y + 10)
+    end
+
+    -- 2. Create Toggle Component
+    function tabSelf:CreateToggle(text, default, callback)
+        callback = callback or function() end
+        local toggled = default or false
+
+        local frame = CreateElement("Frame", {
+            Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = Theme.CardBackground, Parent = page
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = frame})
+        CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border, Parent = frame})
+
+        CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.Gotham, TextSize = 13, TextColor3 = Theme.TextPrimary,
+            Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
+            BackgroundTransparency = 1, Parent = frame
+        })
+
+        local switch = CreateElement("TextButton", {
+            Text = "", Position = UDim2.new(1, -45, 0.5, -10), Size = UDim2.new(0, 32, 0, 20),
+            BackgroundColor3 = toggled and Theme.AccentPrimary or Color3.fromRGB(40, 30, 30), Parent = frame
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = switch})
+
+        local dot = CreateElement("Frame", {
+            Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8), Size = UDim2.new(0, 16, 0, 16),
+            BackgroundColor3 = Theme.TextPrimary, Parent = switch
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(1, 0), Parent = dot})
+
+        switch.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            TweenService:Create(switch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = toggled and Theme.AccentPrimary or Color3.fromRGB(40, 30, 30)}):Play()
+            TweenService:Create(dot, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}):Play()
+            callback(toggled)
+        end)
+
+        page.CanvasSize = UDim2.new(0, 0, 0, page.UIListLayout.AbsoluteContentSize.Y + 10)
+    end
+
+    -- 3. Create Slider Component
+    function tabSelf:CreateSlider(text, min, max, default, callback)
+        callback = callback or function() end
+        local value = default or min
+
+        local frame = CreateElement("Frame", {
+            Size = UDim2.new(1, 0, 0, 45), BackgroundColor3 = Theme.CardBackground, Parent = page
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = frame})
+        CreateElement("UIStroke", {Thickness = 1, Color = Theme.Border, Parent = frame})
+
+        local title = CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.Gotham, TextSize = 13, TextColor3 = Theme.TextPrimary,
+            Position = UDim2.new(0, 12, 0, 5), Size = UDim2.new(0.7, 0, 0, 15), TextXAlignment = Enum.TextXAlignment.Left,
+            BackgroundTransparency = 1, Parent = frame
+        })
+
+        local valLabel = CreateElement("TextLabel", {
+            Text = tostring(value), Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Theme.TextSecondary,
+            Position = UDim2.new(1, -50, 0, 5), Size = UDim2.new(0, 40, 0, 15), TextXAlignment = Enum.TextXAlignment.Right,
+            BackgroundTransparency = 1, Parent = frame
+        })
+
+        local slideBar = CreateElement("TextButton", {
+            Text = "", Position = UDim2.new(0, 12, 0, 26), Size = UDim2.new(1, -24, 0, 6),
+            BackgroundColor3 = Color3.fromRGB(45, 30, 30), Parent = frame
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 3), Parent = slideBar})
+
+        local slideFill = CreateElement("Frame", {
+            Size = UDim2.new((value - min) / (max - min), 0, 1, 0), BackgroundColor3 = Theme.AccentPrimary, Parent = slideBar
+        })
+        CreateElement("UICorner", {CornerRadius = UDim.new(0, 3), Parent = slideFill})
+
+        -- Slider Dragging System
+        local function updateSlider(input)
+            local sizeX = math.clamp((input.Position.X - slideBar.AbsolutePosition.X) / slideBar.AbsoluteSize.X, 0, 1)
+            slideFill.Size = UDim2.new(sizeX, 0, 1, 0)
+            local calculated = math.floor(min + (max - min) * sizeX)
+            valLabel.Text = tostring(calculated)
+            callback(calculated)
+        end
+
+        local sliding = false
+        slideBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                sliding = true
+                updateSlider(input)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                sliding = false
+            end
+        end)
+
+        page.CanvasSize = UDim2.new(0, 0, 0, page.UIListLayout.AbsoluteContentSize.Y + 10)
+    end
+
+    -- 4. Create Label Component
+    function tabSelf:CreateLabel(text)
+        local lbl = CreateElement("TextLabel", {
+            Text = text, Font = Enum.Font.Gotham, TextSize = 13, TextColor3 = Theme.TextSecondary,
+            Size = UDim2.new(1, 0, 0, 24), TextXAlignment = Enum.TextXAlignment.Left, Position = UDim2.new(0, 5, 0, 0),
+            BackgroundTransparency = 1, Parent = page
+        })
+        page.CanvasSize = UDim2.new(0, 0, 0, page.UIListLayout.AbsoluteContentSize.Y + 10)
+        return lbl
+    end
+
+    return tabSelf
+end
+
+return KitsuneLibrary
