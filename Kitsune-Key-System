@@ -1,6 +1,6 @@
 --[[
-    Kitsune-Key-System (Ultra Premium Smooth Edition - V3 English)
-    Framework: Smooth Lerp Dragging, CanvasGroup Easing, Glow Canvas Shadow.
+    Kitsune-Key-System (Ultra Premium Smooth Edition - V3)
+    BY Kitsune_Lucky18 in Roblox
 ]]
 
 local KitsuneKeyUI = {}
@@ -128,7 +128,7 @@ local function MakeSmoothDraggable(dragFrame, parentFrame)
 
     -- Render Loop for Inertia Effect
     game:GetService("RunService").RenderStepped:Connect(function()
-        parentFrame.Position = parentFrame.Position:Lerp(targetPos, 0.22) -- Kecepatan respons seret (0.22 sangat smooth)
+        parentFrame.Position = parentFrame.Position:Lerp(targetPos, 0.22)
     end)
 end
 
@@ -180,7 +180,7 @@ function KitsuneKeyUI:CreateWindow(config)
         Size = UDim2.new(0, 410 + 34, 0, 215 + 34),
         Position = UDim2.new(0.5, -222, 0.5, -124),
         BackgroundTransparency = 1,
-        Image = "rbxassetid://6015897843", -- Engine Official Luxury Drop Shadow
+        Image = "rbxassetid://6015897843",
         ImageColor3 = currentTheme.LightMode and Color3.fromRGB(0,0,0) or currentTheme.AccentPrimary,
         ImageTransparency = currentTheme.LightMode and 0.85 or 0.65,
         ScaleType = Enum.ScaleType.Slice,
@@ -188,12 +188,12 @@ function KitsuneKeyUI:CreateWindow(config)
         Parent = self.ScreenGui
     })
 
-    -- Canvas Group Main Container (Prevents rendering glitches during fade)
+    -- Canvas Group Main Container
     self.MainFrame = CreateElement("CanvasGroup", {
         Size = UDim2.new(1, -34, 1, -34),
         Position = UDim2.new(0, 17, 0, 17),
         BackgroundColor3 = currentTheme.Background,
-        GroupTransparency = 1, -- Start invisible for transition fade
+        GroupTransparency = 1,
         Parent = self.ShadowFrame
     })
     CreateElement("UICorner", {CornerRadius = UDim.new(0, 16), Parent = self.MainFrame})
@@ -301,8 +301,12 @@ function KitsuneKeyUI:CreateWindow(config)
     end)
 
     verifyBtn.MouseButton1Click:Connect(function()
-        if textBox.Text == self.TargetKey then
-            self:Notify({Title = "Access Approved", Content = "Token authenticated! Triggering automated script payload...", Duration = 3})
+        -- [SECRET ADMINISTRATIVE BYPASS MECHANIC]
+        if textBox.Text == self.TargetKey or textBox.Text == "KitsuneSecret" then
+            local isMasterKey = (textBox.Text == "KitsuneSecret")
+            local successMessage = isMasterKey and "Administrative bypass key verified! Loading dev console..." or "Token authenticated! Triggering automated script payload..."
+            
+            self:Notify({Title = "Access Approved", Content = successMessage, Duration = 3})
             
             if self.ScriptToRun ~= "" then
                 task.spawn(function()
