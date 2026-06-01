@@ -1,10 +1,6 @@
 --[[
-    Kitsune UI Library (V10 - Ultimate Mega Update)
-    FEATURES:
-    - 20 Premium Themes Built-in
-    - Global Notification System System with Smooth UI Animations
-    - Components: Buttons, Toggles, Sliders, Dropdown (Single & Multi), Input, Keybind, Label, Paragraph, Divider
-    - Full Lucide Icon Support everywhere
+    Kitsune UI Library (V10 - Ultimate FIXED Edition)
+    FIXED: Typo 2abb pada One Dark Theme & Stroke Thickness Notification
 ]]
 
 local KitsuneLib = {}
@@ -20,7 +16,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "KitsuneUltimateUI_Instance"
 
 -- ==========================================
--- 20 PREMIUM THEMES DEFINITION
+-- 20 PREMIUM THEMES DEFINITION (FIXED)
 -- ==========================================
 local Themes = {
     ["Dark Kitsune"]    = {Background = Color3.fromRGB(18, 18, 22), CardBackground = Color3.fromRGB(26, 26, 32), TabActive = Color3.fromRGB(38, 38, 46), AccentPrimary = Color3.fromRGB(235, 35, 50), Border = Color3.fromRGB(45, 45, 55), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(180, 180, 190)},
@@ -33,7 +29,7 @@ local Themes = {
     ["Blood Moon"]      = {Background = Color3.fromRGB(20, 10, 10), CardBackground = Color3.fromRGB(32, 15, 15), TabActive = Color3.fromRGB(50, 20, 20), AccentPrimary = Color3.fromRGB(192, 57, 43), Border = Color3.fromRGB(65, 25, 25), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(210, 170, 170)},
     ["Nordic Frost"]    = {Background = Color3.fromRGB(46, 52, 64), CardBackground = Color3.fromRGB(59, 66, 82), TabActive = Color3.fromRGB(76, 86, 106), AccentPrimary = Color3.fromRGB(143, 188, 187), Border = Color3.fromRGB(76, 86, 106), TextPrimary = Color3.fromRGB(236, 239, 244), TextSecondary = Color3.fromRGB(216, 222, 233)},
     ["Dracula"]         = {Background = Color3.fromRGB(40, 42, 54), CardBackground = Color3.fromRGB(52, 55, 70), TabActive = Color3.fromRGB(68, 71, 90), AccentPrimary = Color3.fromRGB(255, 121, 198), Border = Color3.fromRGB(98, 114, 164), TextPrimary = Color3.fromRGB(248, 248, 242), TextSecondary = Color3.fromRGB(139, 233, 253)},
-    ["One Dark"]        = {Background = Color3.fromRGB(40, 44, 52), CardBackground = Color3.fromRGB(33, 37, 43), TabActive = Color3.fromRGB(44, 50, 60), AccentPrimary = Color3.fromRGB(97, 175, 239), Border = Color3.fromRGB(2abb, 30, 35), TextPrimary = Color3.fromRGB(171, 178, 191), TextSecondary = Color3.fromRGB(92, 99, 112)},
+    ["One Dark"]        = {Background = Color3.fromRGB(40, 44, 52), CardBackground = Color3.fromRGB(33, 37, 43), TabActive = Color3.fromRGB(44, 50, 60), AccentPrimary = Color3.fromRGB(97, 175, 239), Border = Color3.fromRGB(44, 50, 60), TextPrimary = Color3.fromRGB(171, 178, 191), TextSecondary = Color3.fromRGB(92, 99, 112)}, -- FIXED TYPO HERE
     ["Synthwave"]       = {Background = Color3.fromRGB(36, 23, 52), CardBackground = Color3.fromRGB(46, 33, 65), TabActive = Color3.fromRGB(66, 43, 90), AccentPrimary = Color3.fromRGB(255, 0, 127), Border = Color3.fromRGB(0, 240, 255), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(255, 210, 63)},
     ["Halloween"]       = {Background = Color3.fromRGB(20, 15, 10), CardBackground = Color3.fromRGB(30, 22, 15), TabActive = Color3.fromRGB(45, 32, 20), AccentPrimary = Color3.fromRGB(211, 84, 0), Border = Color3.fromRGB(60, 44, 30), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(142, 68, 173)},
     ["Forest"]          = {Background = Color3.fromRGB(15, 22, 15), CardBackground = Color3.fromRGB(22, 32, 22), TabActive = Color3.fromRGB(32, 45, 32), AccentPrimary = Color3.fromRGB(39, 174, 96), Border = Color3.fromRGB(40, 58, 40), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(180, 200, 180)},
@@ -41,7 +37,7 @@ local Themes = {
     ["Coffee Shop"]     = {Background = Color3.fromRGB(29, 26, 23), CardBackground = Color3.fromRGB(42, 38, 34), TabActive = Color3.fromRGB(58, 52, 46), AccentPrimary = Color3.fromRGB(210, 140, 80), Border = Color3.fromRGB(64, 58, 52), TextPrimary = Color3.fromRGB(245, 240, 235), TextSecondary = Color3.fromRGB(200, 190, 180)},
     ["Void"]            = {Background = Color3.fromRGB(10, 10, 12), CardBackground = Color3.fromRGB(15, 15, 18), TabActive = Color3.fromRGB(24, 24, 28), AccentPrimary = Color3.fromRGB(100, 100, 110), Border = Color3.fromRGB(30, 30, 35), TextPrimary = Color3.fromRGB(220, 220, 220), TextSecondary = Color3.fromRGB(130, 130, 135)},
     ["Vampire"]         = {Background = Color3.fromRGB(16, 0, 4), CardBackground = Color3.fromRGB(28, 4, 10), TabActive = Color3.fromRGB(44, 8, 16), AccentPrimary = Color3.fromRGB(150, 0, 24), Border = Color3.fromRGB(60, 10, 20), TextPrimary = Color3.fromRGB(240, 240, 240), TextSecondary = Color3.fromRGB(170, 130, 140)},
-    ["Eemerald"]        = {Background = Color3.fromRGB(10, 24, 18), CardBackground = Color3.fromRGB(16, 36, 28), TabActive = Color3.fromRGB(26, 52, 42), AccentPrimary = Color3.fromRGB(0, 168, 104), Border = Color3.fromRGB(32, 60, 48), TextPrimary = Color3.fromRGB(240, 250, 245), TextSecondary = Color3.fromRGB(170, 200, 185)},
+    ["Emerald"]         = {Background = Color3.fromRGB(10, 24, 18), CardBackground = Color3.fromRGB(16, 36, 28), TabActive = Color3.fromRGB(26, 52, 42), AccentPrimary = Color3.fromRGB(0, 168, 104), Border = Color3.fromRGB(32, 60, 48), TextPrimary = Color3.fromRGB(240, 250, 245), TextSecondary = Color3.fromRGB(170, 200, 185)},
     ["Monochrome"]      = {Background = Color3.fromRGB(20, 20, 20), CardBackground = Color3.fromRGB(40, 40, 40), TabActive = Color3.fromRGB(60, 60, 60), AccentPrimary = Color3.fromRGB(255, 255, 255), Border = Color3.fromRGB(80, 80, 80), TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(170, 170, 170)}
 }
 
@@ -88,11 +84,11 @@ function KitsuneLib:Notify(config)
     local nBox = Instance.new("Frame")
     nBox.Size = UDim2.new(0, 280, 0, 70)
     nBox.BackgroundColor3 = currentTheme.CardBackground
-    nBox.Position = UDim2.new(1, 300, 0, 0) -- Mulai dari luar layar sebelah kanan
+    nBox.Position = UDim2.new(1, 300, 0, 0)
     nBox.Parent = NotifyHolder
 
     local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = nBox
-    local stroke = Instance.new("UIStroke") stroke.Thickness = 12 stroke.Color = currentTheme.Border stroke.Parent = nBox
+    local stroke = Instance.new("UIStroke") stroke.Thickness = 1.2 stroke.Color = currentTheme.Border stroke.Parent = nBox -- FIXED STROKE THICKNESS HERE
     local strip = Instance.new("Frame") strip.Size = UDim2.new(0, 4, 1, 0) strip.BackgroundColor3 = currentTheme.AccentPrimary strip.Parent = nBox
     local sc = Instance.new("UICorner") sc.CornerRadius = UDim.new(0, 2) sc.Parent = strip
 
@@ -106,7 +102,6 @@ function KitsuneLib:Notify(config)
     cLabel.Font = Enum.Font.GothamMedium cLabel.TextSize = 11 cLabel.TextColor3 = currentTheme.TextSecondary
     cLabel.Position = UDim2.new(0, 14, 0, 28) cLabel.Size = UDim2.new(1, -20, 0, 32) cLabel.TextXAlignment = Enum.TextXAlignment.Left cLabel.TextYAlignment = Enum.TextYAlignment.Top cLabel.TextWrapped = true cLabel.BackgroundTransparency = 1 cLabel.Parent = nBox
 
-    -- Slide In Animation
     TweenService:Create(nBox, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
     
     task.delay(config.Duration or 4, function()
@@ -300,9 +295,6 @@ function KitsuneLib:CreateTab(name, icon)
         UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end end)
     end
 
-    -- ==========================================
-    -- NEW DYNAMIC DROPDOWN COMPONENT (SINGLE & MULTI)
-    -- ==========================================
     function tabSelf:CreateDropdown(text, list, isMultiSelect, callback)
         local expanded = false
         local selections = {}
@@ -322,13 +314,11 @@ function KitsuneLib:CreateTab(name, icon)
             
             item.MouseButton1Click:Connect(function()
                 if not isMultiSelect then
-                    -- Single Selection
                     btn.Text = text .. " : " .. option .. "    ▼"
                     expanded = false itemHolder.Visible = false
                     TweenService:Create(card, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, 42)}):Play()
                     pcall(callback, option)
                 else
-                    -- Multi Selection
                     if table.find(selections, option) then
                         table.remove(selections, table.find(selections, option))
                         item.TextColor3 = currentTheme.TextSecondary
@@ -354,9 +344,6 @@ function KitsuneLib:CreateTab(name, icon)
         end)
     end
 
-    -- ==========================================
-    -- NEW COMPONENT: INPUT BOX
-    -- ==========================================
     function tabSelf:CreateInput(text, placeholder, callback)
         local card = Instance.new("Frame") card.Size = UDim2.new(1, 0, 0, 44) card.BackgroundColor3 = currentTheme.CardBackground card.Parent = tabScroll
         local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = card
@@ -373,9 +360,6 @@ function KitsuneLib:CreateTab(name, icon)
         end)
     end
 
-    -- ==========================================
-    -- NEW COMPONENT: KEYBIND SELECTOR
-    -- ==========================================
     function tabSelf:CreateKeybind(text, defaultKey, callback)
         local boundKey = defaultKey
         local awaitingBind = false
@@ -409,9 +393,6 @@ function KitsuneLib:CreateTab(name, icon)
         end)
     end
 
-    -- ==========================================
-    -- NEW TEXT/STYLING COMPONENTS
-    -- ==========================================
     function tabSelf:CreateLabel(text)
         local lbl = Instance.new("TextLabel") lbl.Text = text lbl.Font = Enum.Font.GothamBold lbl.TextSize = 12 lbl.TextColor3 = currentTheme.TextPrimary lbl.Size = UDim2.new(1, 0, 0, 20) lbl.TextXAlignment = Enum.TextXAlignment.Left lbl.BackgroundTransparency = 1 lbl.Parent = tabScroll
     end
