@@ -1,6 +1,6 @@
 --[[
-    Kitsune UI Library (Ultra Premium V4 Modern Smooth Edition)
-    BY Kitsune_Lucky18 In Roblox
+    Kitsune UI Library (V4 Stable Premium Edition)
+    BY Kitsune_Lucky18 in Roblox
 ]]
 
 local KitsuneLib = {}
@@ -29,7 +29,7 @@ local Themes = {
     ["Vampire Red"]     = {Background = Color3.fromRGB(5, 5, 5),       CardBackground = Color3.fromRGB(12, 10, 10),  AccentPrimary = Color3.fromRGB(192, 57, 43),   AccentSecondary = Color3.fromRGB(150, 40, 30),  TextPrimary = Color3.fromRGB(255, 255, 255), TextSecondary = Color3.fromRGB(150, 130, 130), Border = Color3.fromRGB(28, 15, 15)}
 }
 
--- Cleanup pre-existing UI instance
+-- Hapus UI lama jika ada
 local oldUI = PlayerGui:FindFirstChild(UI_NAME)
 if oldUI then oldUI:Destroy() end
 
@@ -85,10 +85,10 @@ function KitsuneLib:CreateWindow(config)
     self.Tabs = {}
     self.ActiveTab = nil
 
-    -- Main ScreenGui
+    -- Main ScreenGui Layer
     self.ScreenGui = CreateElement("ScreenGui", {Name = UI_NAME, ResetOnSpawn = false, Parent = PlayerGui})
     
-    -- Main Glow Shadow Container
+    -- Main Glow Shadow Frame
     self.ShadowFrame = CreateElement("ImageLabel", {
         Size = UDim2.new(0, 560 + 34, 0, 360 + 34),
         Position = UDim2.new(0.5, -297, 0.5, -197),
@@ -101,12 +101,11 @@ function KitsuneLib:CreateWindow(config)
         Parent = self.ScreenGui
     })
 
-    -- Main Panel Frame
-    self.MainFrame = CreateElement("CanvasGroup", {
+    -- Main Frame (Diubah ke Frame biasa agar anti bug hitam)
+    self.MainFrame = CreateElement("Frame", {
         Size = UDim2.new(1, -34, 1, -34),
         Position = UDim2.new(0, 17, 0, 17),
         BackgroundColor3 = currentTheme.Background,
-        GroupTransparency = 0,
         Parent = self.ShadowFrame
     })
     CreateElement("UICorner", {CornerRadius = UDim.new(0, 14), Parent = self.MainFrame})
@@ -221,7 +220,13 @@ function KitsuneLib:CreateTab(name)
     end
 
     tabButton.MouseButton1Click:Connect(Activate)
-    if #self.Sidebar:GetChildren() == 3 then Activate() end -- Auto activate first tab
+    
+    -- Hitung jumlah tombol tab asli di dalam sidebar
+    local actualTabs = 0
+    for _, child in pairs(self.Sidebar:GetChildren()) do
+        if child:IsA("TextButton") then actualTabs = actualTabs + 1 end
+    end
+    if actualTabs == 1 then Activate() end -- Otomatis buka tab pertama
 
     -- ELEMENT CREATIONS INSIDE TABS
     
@@ -238,9 +243,6 @@ function KitsuneLib:CreateTab(name)
         btn.MouseLeave:Connect(function() stroke.Color = currentTheme.Border end)
         btn.MouseButton1Click:Connect(function()
             pcall(callback)
-            btn.Size = UDim2.new(1, -4, 0, 36)
-            task.wait(0.05)
-            btn.Size = UDim2.new(1, 0, 0, 38)
         end)
     end
 
@@ -284,6 +286,7 @@ function KitsuneLib:CreateTab(name)
         local value = default or min
         local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 48), BackgroundColor3 = currentTheme.CardBackground, Parent = tabScroll})
         CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
+        CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = card})
         
         local title = CreateElement("TextLabel", {
             Text = text, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
@@ -333,7 +336,7 @@ function KitsuneLib:CreateTab(name)
     -- 4. DROPDOWN ELEMENT
     function tabSelf:CreateDropdown(text, list, callback)
         local expanded = false
-        local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = currentTheme.CardBackground, ClipsDescendants = true, Parent = tabScroll})
+        local card = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = currentTheme.CardBackground, Parent = tabScroll})
         CreateElement("UICorner", {CornerRadius = UDim.new(0, 8), Parent = card})
         local stroke = CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = card})
 
@@ -342,7 +345,7 @@ function KitsuneLib:CreateTab(name)
             Size = UDim2.new(1, 0, 0, 38), BackgroundTransparency = 1, AutoButtonColor = false, Parent = card
         })
 
-        local itemHolder = CreateElement("Frame", {Position = UDim2.new(0, 0, 0, 38), Size = UDim2.new(1, 0, 1, -38), BackgroundTransparency = 1, Parent = card})
+        local itemHolder = CreateElement("Frame", {Position = UDim2.new(0, 0, 0, 38), Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, Visible = false, Parent = card})
         local itemLayout = CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Parent = itemHolder})
 
         for _, option in pairs(list) do
@@ -353,15 +356,21 @@ function KitsuneLib:CreateTab(name)
             item.MouseButton1Click:Connect(function()
                 btn.Text = text .. " : " .. option .. "  ▼"
                 expanded = false
-                TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, 0, 0, 38)}):Play()
+                itemHolder.Visible = false
+                TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 0, 38)}):Play()
                 pcall(callback, option)
             end)
         end
 
         btn.MouseButton1Click:Connect(function()
             expanded = not expanded
-            local targetHeight = expanded and (38 + itemLayout.AbsoluteContentSize.Y) or 38
-            TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+            if expanded then
+                itemHolder.Visible = true
+                card.Size = UDim2.new(1, 0, 0, 38 + itemLayout.AbsoluteContentSize.Y)
+            else
+                itemHolder.Visible = false
+                card.Size = UDim2.new(1, 0, 0, 38)
+            end
         end)
     end
 
@@ -378,7 +387,7 @@ function KitsuneLib:CreateTab(name)
 
         local box = CreateElement("TextBox", {
             Text = "", PlaceholderText = placeholder, Font = Enum.Font.Gotham, TextSize = 11.5, TextColor3 = currentTheme.TextPrimary,
-            PlaceholderColor3 = currentTheme.TextSecondary, Size = UDim2.new(0.5, 0, 0, 26), Position = UDim2.new(0.5, -12, 0.5, -13),
+            PlaceholderColor3 = currentTheme.TextSecondary, Size = UDim2.new(0.5, 0, 0, 26), Position = UDim2.new(0.5, 15, 0.5, -13),
             BackgroundColor3 = currentTheme.Background, Parent = card
         })
         CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = box})
