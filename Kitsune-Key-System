@@ -1,6 +1,6 @@
 --[[
-    Kitsune-Key-System (Ultra Modern Fluent Edition)
-    Fitur: Border Glow, Smooth Animation, Auto Accent Text, Dynamic Themes.
+    Kitsune-Key-System (Ultra Premium Smooth Edition - V3 English)
+    Framework: Smooth Lerp Dragging, CanvasGroup Easing, Glow Canvas Shadow.
 ]]
 
 local KitsuneKeyUI = {}
@@ -15,66 +15,66 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "KitsuneKeyUI_Instance"
 
--- 6 Premium Modern Themes
+-- 6 Masterpiece Multi-Themes
 local Themes = {
     ["Dark Kitsune"] = {
-        Background = Color3.fromRGB(13, 9, 9),
-        CardBackground = Color3.fromRGB(20, 14, 14),
-        AccentPrimary = Color3.fromRGB(226, 37, 53),
-        AccentSecondary = Color3.fromRGB(143, 14, 25),
+        Background = Color3.fromRGB(11, 8, 8),
+        CardBackground = Color3.fromRGB(18, 13, 13),
+        AccentPrimary = Color3.fromRGB(235, 35, 50),
+        AccentSecondary = Color3.fromRGB(150, 15, 25),
         TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(170, 150, 150),
-        Border = Color3.fromRGB(38, 24, 24),
+        TextSecondary = Color3.fromRGB(165, 145, 145),
+        Border = Color3.fromRGB(35, 22, 22),
         LightMode = false
     },
     ["White Kitsune"] = {
-        Background = Color3.fromRGB(244, 244, 246),
+        Background = Color3.fromRGB(245, 246, 248),
         CardBackground = Color3.fromRGB(255, 255, 255),
-        AccentPrimary = Color3.fromRGB(226, 37, 53),
-        AccentSecondary = Color3.fromRGB(180, 20, 32),
-        TextPrimary = Color3.fromRGB(28, 28, 30),
-        TextSecondary = Color3.fromRGB(130, 130, 140),
-        Border = Color3.fromRGB(225, 225, 230),
+        AccentPrimary = Color3.fromRGB(235, 35, 50),
+        AccentSecondary = Color3.fromRGB(180, 20, 30),
+        TextPrimary = Color3.fromRGB(25, 25, 30),
+        TextSecondary = Color3.fromRGB(140, 140, 150),
+        Border = Color3.fromRGB(225, 226, 232),
         LightMode = true
     },
     ["Midnight Token"] = {
-        Background = Color3.fromRGB(9, 10, 15),
-        CardBackground = Color3.fromRGB(15, 17, 26),
-        AccentPrimary = Color3.fromRGB(88, 101, 242), -- Discord Blue
-        AccentSecondary = Color3.fromRGB(64, 75, 180),
+        Background = Color3.fromRGB(8, 9, 13),
+        CardBackground = Color3.fromRGB(14, 16, 24),
+        AccentPrimary = Color3.fromRGB(90, 105, 245),
+        AccentSecondary = Color3.fromRGB(60, 70, 185),
         TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(140, 145, 160),
-        Border = Color3.fromRGB(28, 31, 48),
+        TextSecondary = Color3.fromRGB(135, 140, 155),
+        Border = Color3.fromRGB(26, 29, 44),
         LightMode = false
     },
     ["Tokyo Light"] = {
-        Background = Color3.fromRGB(240, 242, 248),
+        Background = Color3.fromRGB(238, 240, 246),
         CardBackground = Color3.fromRGB(255, 255, 255),
-        AccentPrimary = Color3.fromRGB(114, 137, 218),
-        AccentSecondary = Color3.fromRGB(90, 110, 180),
-        TextPrimary = Color3.fromRGB(40, 44, 55),
-        TextSecondary = Color3.fromRGB(120, 125, 140),
-        Border = Color3.fromRGB(220, 224, 235),
+        AccentPrimary = Color3.fromRGB(115, 138, 220),
+        AccentSecondary = Color3.fromRGB(85, 105, 185),
+        TextPrimary = Color3.fromRGB(35, 40, 50),
+        TextSecondary = Color3.fromRGB(125, 130, 145),
+        Border = Color3.fromRGB(218, 222, 232),
         LightMode = true
     },
     ["Cyberpunk"] = {
-        Background = Color3.fromRGB(12, 12, 8),
-        CardBackground = Color3.fromRGB(22, 22, 12),
-        AccentPrimary = Color3.fromRGB(254, 231, 21), -- Neon Yellow
-        AccentSecondary = Color3.fromRGB(210, 190, 10),
+        Background = Color3.fromRGB(10, 10, 7),
+        CardBackground = Color3.fromRGB(20, 20, 11),
+        AccentPrimary = Color3.fromRGB(255, 235, 15),
+        AccentSecondary = Color3.fromRGB(200, 180, 5),
         TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(160, 160, 120),
-        Border = Color3.fromRGB(45, 45, 20),
+        TextSecondary = Color3.fromRGB(155, 155, 115),
+        Border = Color3.fromRGB(40, 40, 18),
         LightMode = false
     },
     ["Amethyst"] = {
-        Background = Color3.fromRGB(11, 8, 15),
-        CardBackground = Color3.fromRGB(18, 13, 26),
-        AccentPrimary = Color3.fromRGB(168, 85, 247), -- Purple Rose
-        AccentSecondary = Color3.fromRGB(115, 40, 180),
+        Background = Color3.fromRGB(10, 7, 14),
+        CardBackground = Color3.fromRGB(16, 12, 24),
+        AccentPrimary = Color3.fromRGB(165, 80, 245),
+        AccentSecondary = Color3.fromRGB(110, 35, 175),
         TextPrimary = Color3.fromRGB(255, 255, 255),
-        TextSecondary = Color3.fromRGB(155, 140, 165),
-        Border = Color3.fromRGB(36, 25, 50),
+        TextSecondary = Color3.fromRGB(150, 135, 160),
+        Border = Color3.fromRGB(34, 24, 48),
         LightMode = false
     }
 }
@@ -83,7 +83,6 @@ local Themes = {
 local oldUI = PlayerGui:FindFirstChild(UI_NAME)
 if oldUI then oldUI:Destroy() end
 
--- Advanced Functional Instancing
 local function CreateElement(className, properties, children)
     local element = Instance.new(className)
     for key, value in pairs(properties) do
@@ -97,43 +96,51 @@ local function CreateElement(className, properties, children)
     return element
 end
 
--- Inertia/Smooth Draggable
-local function MakeDraggable(dragFrame, parentFrame)
+-- Ultra Smooth Inertia Draggable (Lerp Mechanics)
+local function MakeSmoothDraggable(dragFrame, parentFrame)
     local dragging, dragInput, dragStart, startPos
+    local targetPos = parentFrame.Position
+
     dragFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = parentFrame.Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
+
     dragFrame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            TweenService:Create(parentFrame, TweenInfo.new(0.15, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
-                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            }):Play()
+            targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
+    end)
+
+    -- Render Loop for Inertia Effect
+    game:GetService("RunService").RenderStepped:Connect(function()
+        parentFrame.Position = parentFrame.Position:Lerp(targetPos, 0.22) -- Kecepatan respons seret (0.22 sangat smooth)
     end)
 end
 
--- Micro-Interaction Button Hover
+-- Micro-Animate Button Elastic Effects
 local function ApplyButtonEffects(button, normalColor, hoverColor)
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TweenService:Create(button, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
             BackgroundColor3 = hoverColor
         }):Play()
     end)
     button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TweenService:Create(button, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
             BackgroundColor3 = normalColor
         }):Play()
     end)
@@ -146,56 +153,73 @@ function KitsuneKeyUI:CreateWindow(config)
     self.Theme = Themes[selectedTheme] or Themes["Dark Kitsune"]
     local currentTheme = self.Theme
 
-    self.Title = config.Title or "Kitsune Key System"
+    self.Title = config.Title or "Kitsune Premium Verification"
     self.TargetKey = config.Key or "Kitsune666"
     self.GetKeyLink = config.GetKeyLink or ""
     self.ScriptToRun = config.ScriptOnSuccess or ""
     
-    -- Main Layer
+    -- Main Screen Gui Layer
     self.ScreenGui = CreateElement("ScreenGui", {
         Name = UI_NAME,
         ResetOnSpawn = false,
         Parent = PlayerGui
     })
 
-    -- Notification Stack Frame
+    -- Notification List Container
     self.NotificationContainer = CreateElement("Frame", {
-        Size = UDim2.new(0, 310, 1, -40),
-        Position = UDim2.new(1, -330, 0, 20),
+        Size = UDim2.new(0, 320, 1, -40),
+        Position = UDim2.new(1, -340, 0, 20),
         BackgroundTransparency = 1,
         Parent = self.ScreenGui
     }, {
         CreateElement("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10), VerticalAlignment = Enum.VerticalAlignment.Bottom})
     })
 
-    -- Glassmorphism Inspired Center Frame
-    self.MainFrame = CreateElement("Frame", {
-        Size = UDim2.new(0, 410, 0, 0), -- Start collapsed
-        Position = UDim2.new(0.5, -205, 0.5, -100),
-        BackgroundColor3 = currentTheme.Background,
+    -- Outer Premium Drop Shadow / Glow Frame
+    self.ShadowFrame = CreateElement("ImageLabel", {
+        Size = UDim2.new(0, 410 + 34, 0, 215 + 34),
+        Position = UDim2.new(0.5, -222, 0.5, -124),
         BackgroundTransparency = 1,
-        ClipsDescendants = true,
+        Image = "rbxassetid://6015897843", -- Engine Official Luxury Drop Shadow
+        ImageColor3 = currentTheme.LightMode and Color3.fromRGB(0,0,0) or currentTheme.AccentPrimary,
+        ImageTransparency = currentTheme.LightMode and 0.85 or 0.65,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(49, 49, 450, 450),
         Parent = self.ScreenGui
     })
-    CreateElement("UICorner", {CornerRadius = UDim.new(0, 16), Parent = self.MainFrame}) -- Lebih membulat halus
-    local mainStroke = CreateElement("UIStroke", {Thickness = 1.5, Color = currentTheme.Border, Transparency = 1, Parent = self.MainFrame})
 
-    -- Dynamic Header Gradient Bar
+    -- Canvas Group Main Container (Prevents rendering glitches during fade)
+    self.MainFrame = CreateElement("CanvasGroup", {
+        Size = UDim2.new(1, -34, 1, -34),
+        Position = UDim2.new(0, 17, 0, 17),
+        BackgroundColor3 = currentTheme.Background,
+        GroupTransparency = 1, -- Start invisible for transition fade
+        Parent = self.ShadowFrame
+    })
+    CreateElement("UICorner", {CornerRadius = UDim.new(0, 16), Parent = self.MainFrame})
+    local mainStroke = CreateElement("UIStroke", {Thickness = 1.2, Color = currentTheme.Border, Parent = self.MainFrame})
+
+    -- Smooth Draggable Trigger Surface
+    local dragSurface = CreateElement("Frame", {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ZIndex = 0, Parent = self.MainFrame
+    })
+    MakeSmoothDraggable(dragSurface, self.ShadowFrame)
+
+    -- Top Accent Gradient Line
     local topGlow = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 3.5), BackgroundColor3 = Color3.new(1,1,1), Parent = self.MainFrame}, {
         CreateElement("UIGradient", {Color = ColorSequence.new(currentTheme.AccentPrimary, currentTheme.AccentSecondary)})
     })
 
-    -- Top Bar (Drag Area)
+    -- Top Header Panel
     local header = CreateElement("Frame", {Size = UDim2.new(1, 0, 0, 50), BackgroundTransparency = 1, Parent = self.MainFrame})
-    MakeDraggable(header, self.MainFrame)
 
     CreateElement("TextLabel", {
-        Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = currentTheme.TextPrimary,
+        Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 13.5, TextColor3 = currentTheme.TextPrimary,
         Position = UDim2.new(0, 20, 0, 0), Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left,
         BackgroundTransparency = 1, Parent = header
     })
 
-    -- Modern Minimalist Close Target
+    -- Minimalist Close Target 
     local closeBtn = CreateElement("TextButton", {
         Text = "×", Font = Enum.Font.GothamMedium, TextSize = 20, 
         TextColor3 = currentTheme.TextSecondary, AutoButtonColor = false,
@@ -207,19 +231,19 @@ function KitsuneKeyUI:CreateWindow(config)
     ApplyButtonEffects(closeBtn, currentTheme.CardBackground, currentTheme.Border)
     closeBtn.MouseButton1Click:Connect(function() self:DestroyUI() end)
 
-    -- Context Panel
+    -- Body Layout Content
     local body = CreateElement("Frame", {
-        Position = UDim2.new(0, 20, 0, 55), Size = UDim2.new(1, -40, 1, -75), BackgroundTransparency = 1, Parent = self.MainFrame
+        Position = UDim2.new(0, 20, 0, 52), Size = UDim2.new(1, -40, 1, -72), BackgroundTransparency = 1, Parent = self.MainFrame
     })
 
     CreateElement("TextLabel", {
-        Text = "Masukkan access token / key valid untuk mengaktifkan modul eksekusi script ini.", 
+        Text = "Provide a certified product key below to grant utility injection privileges.", 
         Font = Enum.Font.Gotham, TextSize = 11.5, TextColor3 = currentTheme.TextSecondary, TextWrapped = true,
         Size = UDim2.new(1, 0, 0, 32), TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top,
         BackgroundTransparency = 1, Parent = body
     })
 
-    -- Clean Input Element
+    -- Clean Input Frame Box
     local inputCard = CreateElement("Frame", {
         Position = UDim2.new(0, 0, 0, 42), Size = UDim2.new(1, 0, 0, 44),
         BackgroundColor3 = currentTheme.CardBackground, Parent = body
@@ -229,21 +253,21 @@ function KitsuneKeyUI:CreateWindow(config)
 
     local textBox = CreateElement("TextBox", {
         Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1,
-        Text = "", PlaceholderText = "Paste token key disini...", Font = Enum.Font.Gotham, TextSize = 12.5,
+        Text = "", PlaceholderText = "Enter active access token...", Font = Enum.Font.Gotham, TextSize = 12.5,
         TextColor3 = currentTheme.TextPrimary, 
         PlaceholderColor3 = currentTheme.LightMode and Color3.fromRGB(150, 150, 160) or Color3.fromRGB(105, 95, 95), 
         Parent = inputCard
     })
     
-    -- TextBox Focus Accent Interaction
+    -- TextBox Reactive Focus Interaction Line
     textBox.Focused:Connect(function()
-        TweenService:Create(inputStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Color = currentTheme.AccentPrimary}):Play()
+        TweenService:Create(inputStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Color = currentTheme.AccentPrimary, Thickness = 1.4}):Play()
     end)
     textBox.FocusLost:Connect(function()
-        TweenService:Create(inputStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Color = currentTheme.Border}):Play()
+        TweenService:Create(inputStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Color = currentTheme.Border, Thickness = 1}):Play()
     end)
 
-    -- Button Layout Container
+    -- Bottom Button Configuration Grid
     local btnGrid = CreateElement("Frame", {
         Position = UDim2.new(0, 0, 0, 102), Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Parent = body
     })
@@ -256,7 +280,7 @@ function KitsuneKeyUI:CreateWindow(config)
     CreateElement("UIStroke", {Thickness = 1, Color = currentTheme.Border, Parent = getKeyBtn})
     ApplyButtonEffects(getKeyBtn, currentTheme.CardBackground, currentTheme.Border)
 
-    -- Dynamic Text Color for Cyberpunk Theme Target Integration
+    -- Cyberpunk Theme Contrast Fix
     local verifyTextColor = (selectedTheme == "Cyberpunk") and Color3.fromRGB(15, 15, 10) or Color3.fromRGB(255, 255, 255)
 
     local verifyBtn = CreateElement("TextButton", {
@@ -266,19 +290,19 @@ function KitsuneKeyUI:CreateWindow(config)
     CreateElement("UICorner", {CornerRadius = UDim.new(0, 10), Parent = verifyBtn})
     ApplyButtonEffects(verifyBtn, currentTheme.AccentPrimary, currentTheme.AccentSecondary)
 
-    -- Functional Bindings
+    -- Connect Actions
     getKeyBtn.MouseButton1Click:Connect(function()
         if setclipboard and self.GetKeyLink ~= "" then
             setclipboard(self.GetKeyLink)
-            self:Notify({Title = "Kitsune Security", Content = "URL Key bypass disalin ke clipboard!", Duration = 3})
+            self:Notify({Title = "Security Protocol", Content = "Bypass verification URL copied to clipboard!", Duration = 3})
         else
-            self:Notify({Title = "Kitsune Security", Content = "Gagal menyalin (Fitur clipboard tidak didukung).", Duration = 3})
+            self:Notify({Title = "Security Protocol", Content = "Incompatible executor clipboard module.", Duration = 3})
         end
     end)
 
     verifyBtn.MouseButton1Click:Connect(function()
         if textBox.Text == self.TargetKey then
-            self:Notify({Title = "Sistem Terverifikasi", Content = "Token valid! Mengunduh dependensi script...", Duration = 3})
+            self:Notify({Title = "Access Approved", Content = "Token authenticated! Triggering automated script payload...", Duration = 3})
             
             if self.ScriptToRun ~= "" then
                 task.spawn(function()
@@ -288,23 +312,21 @@ function KitsuneKeyUI:CreateWindow(config)
                 end)
             end
             
-            task.delay(1, function() self:DestroyUI() end)
+            task.delay(1.2, function() self:DestroyUI() end)
         else
-            self:Notify({Title = "Validasi Gagal", Content = "Token salah! Ambil token baru via panel sebelah kiri.", Duration = 4})
+            self:Notify({Title = "Access Denied", Content = "The key entered is invalid or has expired.", Duration = 4})
         end
     end)
 
-    -- Soft Material Easing Entrance
-    TweenService:Create(self.MainFrame, TweenInfo.new(0.45, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 410, 0, 215),
-        BackgroundTransparency = 0
+    -- Cinematic Smooth Quintic Fade Entrance Animation
+    TweenService:Create(self.MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        GroupTransparency = 0
     }):Play()
-    TweenService:Create(mainStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Transparency = 0}):Play()
 
     return self
 end
 
--- Premium Notification Builder
+-- Premium Fluid Toast Notification
 function KitsuneKeyUI:Notify(cfg)
     local currentTheme = self.Theme
     local card = CreateElement("Frame", {
@@ -316,27 +338,29 @@ function KitsuneKeyUI:Notify(cfg)
     })
 
     CreateElement("TextLabel", {
-        Text = cfg.Title or "Notification", Font = Enum.Font.GothamBold, TextSize = 12.5, TextColor3 = currentTheme.TextPrimary,
+        Text = cfg.Title or "System Notice", Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = currentTheme.TextPrimary,
         Position = UDim2.new(0, 16, 0, 8), Size = UDim2.new(1, -24, 0, 16), BackgroundTransparency = 1, Parent = card
     })
     CreateElement("TextLabel", {
-        Text = cfg.Content or "", Font = Enum.Font.Gotham, TextSize = 11, TextColor3 = currentTheme.TextSecondary,
+        Text = cfg.Content or "", Font = Enum.Font.Gotham, TextSize = 10.5, TextColor3 = currentTheme.TextSecondary,
         Position = UDim2.new(0, 16, 0, 24), Size = UDim2.new(1, -24, 0, 26), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top, BackgroundTransparency = 1, Parent = card
     })
 
-    TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    
     task.delay(cfg.Duration or 4, function()
-        local close = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,0)})
-        close:Play() close.Completed:Connect(function() card:Destroy() end)
+        local close = TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,0)})
+        close:Play() 
+        close.Completed:Connect(function() card:Destroy() end)
     end)
 end
 
+-- Premium Fade Exit
 function KitsuneKeyUI:DestroyUI()
     if self.MainFrame then
-        local closeTween = TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 410, 0, 0),
-            BackgroundTransparency = 1
+        local closeTween = TweenService:Create(self.MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            GroupTransparency = 1
         })
         closeTween:Play()
         closeTween.Completed:Connect(function()
