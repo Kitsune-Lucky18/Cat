@@ -1,0 +1,160 @@
+-- KAI Hub Library (Expanded Starter)
+-- Original framework template for Roblox UI libraries
+
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local KAI = {}
+KAI.__index = KAI
+
+local Theme = {
+    Background = Color3.fromRGB(18,18,18),
+    Secondary = Color3.fromRGB(25,25,25),
+    Accent = Color3.fromRGB(170,120,255),
+    Text = Color3.fromRGB(255,255,255)
+}
+
+function KAI:Notify(cfg)
+    cfg = cfg or {}
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "KAINotify"
+    gui.Parent = CoreGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.fromOffset(300,80)
+    frame.Position = UDim2.new(1,-320,1,-100)
+    frame.BackgroundColor3 = Theme.Secondary
+    frame.Parent = gui
+
+    local corner = Instance.new("UICorner", frame)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1,0,0,30)
+    title.BackgroundTransparency = 1
+    title.Text = cfg.Title or "KAI Hub"
+    title.TextColor3 = Theme.Text
+    title.Parent = frame
+
+    local content = Instance.new("TextLabel")
+    content.Size = UDim2.new(1,-10,1,-30)
+    content.Position = UDim2.fromOffset(5,30)
+    content.BackgroundTransparency = 1
+    content.TextWrapped = true
+    content.Text = cfg.Content or ""
+    content.TextColor3 = Theme.Text
+    content.Parent = frame
+
+    task.delay(cfg.Duration or 4,function()
+        gui:Destroy()
+    end)
+end
+
+function KAI:CreateWindow(cfg)
+    cfg = cfg or {}
+
+    local Window = {}
+    local Tabs = {}
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "KAIHub"
+    gui.Parent = CoreGui
+
+    local main = Instance.new("Frame")
+    main.Size = UDim2.fromOffset(750,450)
+    main.Position = UDim2.fromScale(.5,.5)
+    main.AnchorPoint = Vector2.new(.5,.5)
+    main.BackgroundColor3 = Theme.Background
+    main.Parent = gui
+
+    Instance.new("UICorner",main)
+
+    local sidebar = Instance.new("Frame")
+    sidebar.Size = UDim2.new(0,180,1,0)
+    sidebar.BackgroundColor3 = Theme.Secondary
+    sidebar.Parent = main
+
+    local sideLayout = Instance.new("UIListLayout")
+    sideLayout.Parent = sidebar
+
+    local pages = Instance.new("Frame")
+    pages.Size = UDim2.new(1,-180,1,0)
+    pages.Position = UDim2.new(0,180,0,0)
+    pages.BackgroundTransparency = 1
+    pages.Parent = main
+
+    function Window:CreateTab(name)
+        local Tab = {}
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1,0,0,40)
+        button.Text = name
+        button.Parent = sidebar
+
+        local page = Instance.new("ScrollingFrame")
+        page.Size = UDim2.new(1,0,1,0)
+        page.Visible = false
+        page.Parent = pages
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0,6)
+        layout.Parent = page
+
+        button.MouseButton1Click:Connect(function()
+            for _,v in pairs(Tabs) do
+                v.Page.Visible = false
+            end
+            page.Visible = true
+        end)
+
+        function Tab:CreateButton(opt)
+            local b = Instance.new("TextButton")
+            b.Size = UDim2.new(1,-10,0,35)
+            b.Text = opt.Name or "Button"
+            b.Parent = page
+
+            b.MouseButton1Click:Connect(function()
+                if opt.Callback then
+                    opt.Callback()
+                end
+            end)
+        end
+
+        function Tab:CreateToggle(opt)
+            local state = opt.CurrentValue or false
+
+            local b = Instance.new("TextButton")
+            b.Size = UDim2.new(1,-10,0,35)
+            b.Text = (opt.Name or "Toggle").." : "..tostring(state)
+            b.Parent = page
+
+            b.MouseButton1Click:Connect(function()
+                state = not state
+                b.Text = (opt.Name or "Toggle").." : "..tostring(state)
+
+                if opt.Callback then
+                    opt.Callback(state)
+                end
+            end)
+        end
+
+        function Tab:CreateLabel(text)
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(1,-10,0,30)
+            lbl.Text = text
+            lbl.Parent = page
+        end
+
+        Tabs[#Tabs+1] = {Page = page}
+
+        if #Tabs == 1 then
+            page.Visible = true
+        end
+
+        return Tab
+    end
+
+    return Window
+end
+
+return KAI
