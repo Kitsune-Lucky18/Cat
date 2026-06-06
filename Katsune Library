@@ -1,0 +1,93 @@
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Kitsune = {}
+
+-- 1. TEMA LENGKAP
+Kitsune.Themes = {
+    ["Kitsune"] = {Main = Color3.fromRGB(255, 70, 70), Bg = Color3.fromRGB(25, 25, 30)},
+    ["Kitsune Dark"] = {Main = Color3.fromRGB(180, 40, 40), Bg = Color3.fromRGB(15, 15, 15)},
+    ["Kitsune White"] = {Main = Color3.fromRGB(255, 100, 100), Bg = Color3.fromRGB(240, 240, 245)},
+    ["Dark"] = {Main = Color3.fromRGB(45, 45, 45), Bg = Color3.fromRGB(20, 20, 20)},
+    ["White"] = {Main = Color3.fromRGB(200, 200, 200), Bg = Color3.fromRGB(255, 255, 255)},
+    ["Rainbow"] = {Main = Color3.fromRGB(255, 0, 0), Bg = Color3.fromRGB(20, 20, 20)}
+}
+
+-- 2. ENGINE DASAR
+local function AddCorner(parent)
+    local corner = Instance.new("UICorner", parent)
+    corner.CornerRadius = UDim.new(0, 8)
+end
+
+local function Tween(obj, props)
+    TweenService:Create(obj, TweenInfo.new(0.3, Enum.EasingStyle.Quart), props):Play()
+end
+
+-- 3. WINDOW UTAMA
+function Kitsune:CreateWindow(config)
+    local Theme = self.Themes[config.Theme]
+    local Gui = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+    local Main = Instance.new("Frame", Gui)
+    Main.Size = UDim2.new(0, 300, 0, 400); Main.Position = UDim2.new(0.5, -150, 0.5, -200)
+    Main.BackgroundColor3 = Theme.Bg; AddCorner(Main)
+
+    local Lib = {}
+    function Lib:CreateTab(name)
+        local Container = Instance.new("ScrollingFrame", Main)
+        Container.Size = UDim2.new(1, -20, 1, -20); Container.Position = UDim2.new(0, 10, 0, 10)
+        Container.BackgroundTransparency = 1; Container.CanvasSize = UDim2.new(0,0,2,0)
+        
+        local Tab = {}
+
+        -- BUTTON
+        function Tab:CreateButton(args)
+            local btn = Instance.new("TextButton", Container)
+            btn.Size = UDim2.new(1, 0, 0, 35); btn.Text = args.Name; btn.BackgroundColor3 = Theme.Main; AddCorner(btn)
+            btn.MouseButton1Click:Connect(args.Callback)
+        end
+
+        -- TOGGLE
+        function Tab:CreateToggle(args)
+            local toggle = Instance.new("TextButton", Container)
+            toggle.Size = UDim2.new(1, 0, 0, 35); toggle.Text = args.Name; toggle.BackgroundColor3 = Color3.fromRGB(40,40,40); AddCorner(toggle)
+            local on = false
+            toggle.MouseButton1Click:Connect(function()
+                on = not on
+                Tween(toggle, {BackgroundColor3 = on and Theme.Main or Color3.fromRGB(40,40,40)})
+                args.Callback(on)
+            end)
+        end
+
+        -- SLIDER (Sederhana)
+        function Tab:CreateSlider(args)
+            local slider = Instance.new("Frame", Container)
+            slider.Size = UDim2.new(1, 0, 0, 35); slider.BackgroundColor3 = Color3.fromRGB(40,40,40); AddCorner(slider)
+            -- (Tambahkan logic drag disini sesuai kebutuhan)
+        end
+
+        -- LABEL
+        function Tab:CreateLabel(text)
+            local lbl = Instance.new("TextLabel", Container)
+            lbl.Text = text; lbl.Size = UDim2.new(1, 0, 0, 30); lbl.BackgroundTransparency = 1
+        end
+
+        -- DIVIDER
+        function Tab:CreateDivider()
+            local div = Instance.new("Frame", Container)
+            div.Size = UDim2.new(1, 0, 0, 1); div.BackgroundColor3 = Color3.new(1,1,1); div.BackgroundTransparency = 0.8
+        end
+
+        return Tab
+    end
+    
+    -- Logika Rainbow
+    if config.Theme == "Rainbow" then
+        RunService.RenderStepped:Connect(function()
+            local hue = tick() % 5 / 5
+            Main.BackgroundColor3 = Color3.fromHSV(hue, 0.5, 0.2)
+        end)
+    end
+    
+    return Lib
+end
+
+return Kitsune
