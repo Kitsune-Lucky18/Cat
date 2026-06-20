@@ -1,5 +1,5 @@
 --[[
-	UILibrary.lua  (v2,23 — Complete Edition)
+	UILibrary.lua  (v2,24 — Complete Edition)
 	Custom modern UI Library untuk Roblox — dark theme, rounded, tab-based,
 	lengkap dengan Notification system. Dibuat untuk dipasang sebagai
 	ModuleScript di game-mu sendiri (settings menu, admin panel, dsb).
@@ -525,7 +525,7 @@ function UILibrary:CreateWindow(config)
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(16, 4),
-		Size = UDim2.new(1, -80, 0, 18),
+		Size = UDim2.new(1, -118, 0, 18),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = TopBar,
 	})
@@ -538,11 +538,24 @@ function UILibrary:CreateWindow(config)
 			TextColor3 = Theme.SubText,
 			BackgroundTransparency = 1,
 			Position = UDim2.fromOffset(16, 23),
-			Size = UDim2.new(1, -80, 0, 16),
+			Size = UDim2.new(1, -118, 0, 16),
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = TopBar,
 		})
 	end
+
+	local MinimizeBtn = create("TextButton", {
+		Text = "—",
+		Font = FONT_BOLD,
+		TextSize = 14,
+		TextColor3 = Theme.SubText,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(38, 38),
+		Position = UDim2.new(1, -80, 0, 4),
+		Parent = TopBar,
+	})
+	MinimizeBtn.MouseEnter:Connect(function() tween(MinimizeBtn, {TextColor3 = Theme.Text}, 0.15) end)
+	MinimizeBtn.MouseLeave:Connect(function() tween(MinimizeBtn, {TextColor3 = Theme.SubText}, 0.15) end)
 
 	local CloseBtn = create("TextButton", {
 		Text = "✕",
@@ -607,6 +620,7 @@ function UILibrary:CreateWindow(config)
 		Tabs = {},
 		_firstTab = true,
 		_visible = true,
+		_minimized = false,
 	}
 	setmetatable(Window, UILibrary)
 
@@ -622,6 +636,19 @@ function UILibrary:CreateWindow(config)
 		end
 	end
 
+	local function setMinimized(v)
+		Window._minimized = v
+		Sidebar.Visible = not v
+		Body.Visible = not v
+		MinimizeBtn.Text = v and "▢" or "—"
+		if v then
+			tween(Main, {Size = UDim2.fromOffset(size.X.Offset, 46)}, 0.2)
+		else
+			tween(Main, {Size = size}, 0.2)
+		end
+	end
+
+	MinimizeBtn.MouseButton1Click:Connect(function() setMinimized(not Window._minimized) end)
 	CloseBtn.MouseButton1Click:Connect(function() setVisible(false) end)
 
 	UserInputService.InputBegan:Connect(function(input, gpe)
@@ -632,6 +659,7 @@ function UILibrary:CreateWindow(config)
 	end)
 
 	Window.SetVisible = function(_, v) setVisible(v) end
+	Window.SetMinimized = function(_, v) setMinimized(v) end
 
 	return Window
 end
