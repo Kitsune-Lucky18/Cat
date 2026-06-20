@@ -1,5 +1,5 @@
 --[[
-	UILibrary.lua  (v2,2 — Complete Edition)
+	UILibrary.lua  (v2,23 — Complete Edition)
 	Custom modern UI Library untuk Roblox — dark theme, rounded, tab-based,
 	lengkap dengan Notification system. Dibuat untuk dipasang sebagai
 	ModuleScript di game-mu sendiri (settings menu, admin panel, dsb).
@@ -12,6 +12,10 @@
 	================= CONTOH PEMAKAIAN =================
 
 	local UILibrary = require(game.ReplicatedStorage.UILibrary)
+
+	-- (opsional) ganti tema SEBELUM CreateWindow, biar window pakai tema itu.
+	-- Lihat UILibrary:GetThemes() untuk daftar 20 nama tema yang tersedia.
+	UILibrary:SetTheme("Kitsune")
 
 	local Window = UILibrary:CreateWindow({
 		Title = "Game Settings",
@@ -84,6 +88,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -91,23 +96,173 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UILibrary = {}
 UILibrary.__index = UILibrary
 
--- ============ THEME ============
-local Theme = {
-	Background     = Color3.fromRGB(24, 24, 27),
-	Sidebar        = Color3.fromRGB(20, 20, 22),
-	Section        = Color3.fromRGB(30, 30, 34),
-	Element        = Color3.fromRGB(38, 38, 43),
-	ElementHover   = Color3.fromRGB(46, 46, 52),
-	Accent         = Color3.fromRGB(105, 92, 255),
-	AccentHover    = Color3.fromRGB(125, 112, 255),
-	Text           = Color3.fromRGB(235, 235, 240),
-	SubText        = Color3.fromRGB(150, 150, 160),
-	Stroke         = Color3.fromRGB(50, 50, 56),
-	Success        = Color3.fromRGB(80, 200, 120),
-	Error          = Color3.fromRGB(235, 90, 90),
-	Warning        = Color3.fromRGB(235, 180, 70),
-	Info           = Color3.fromRGB(95, 150, 235),
+-- ============ THEME SYSTEM ============
+-- 20 preset tema siap pakai. Tiap tema adalah tabel warna lengkap.
+-- Ganti tema aktif lewat UILibrary:SetTheme("NamaTema") sebelum atau
+-- setelah CreateWindow — semua komponen yang sudah dibuat akan ikut berubah.
+local Themes = {
+	Black = {
+		Background=Color3.fromRGB(15,15,17), Sidebar=Color3.fromRGB(11,11,13), Section=Color3.fromRGB(20,20,23),
+		Element=Color3.fromRGB(26,26,30), ElementHover=Color3.fromRGB(34,34,39), Accent=Color3.fromRGB(120,120,130),
+		AccentHover=Color3.fromRGB(150,150,160), Text=Color3.fromRGB(235,235,238), SubText=Color3.fromRGB(140,140,148),
+		Stroke=Color3.fromRGB(40,40,45), Success=Color3.fromRGB(80,200,120), Error=Color3.fromRGB(235,90,90),
+		Warning=Color3.fromRGB(235,180,70), Info=Color3.fromRGB(95,150,235),
+	},
+	White = {
+		Background=Color3.fromRGB(246,246,248), Sidebar=Color3.fromRGB(255,255,255), Section=Color3.fromRGB(238,238,241),
+		Element=Color3.fromRGB(255,255,255), ElementHover=Color3.fromRGB(230,230,235), Accent=Color3.fromRGB(90,80,230),
+		AccentHover=Color3.fromRGB(110,100,240), Text=Color3.fromRGB(25,25,30), SubText=Color3.fromRGB(110,110,120),
+		Stroke=Color3.fromRGB(220,220,226), Success=Color3.fromRGB(45,165,95), Error=Color3.fromRGB(210,60,60),
+		Warning=Color3.fromRGB(200,140,20), Info=Color3.fromRGB(50,110,210),
+	},
+	Kitsune = {
+		Background=Color3.fromRGB(16,16,20), Sidebar=Color3.fromRGB(12,12,15), Section=Color3.fromRGB(22,22,27),
+		Element=Color3.fromRGB(30,28,34), ElementHover=Color3.fromRGB(40,36,46), Accent=Color3.fromRGB(255,122,69),
+		AccentHover=Color3.fromRGB(255,142,95), Text=Color3.fromRGB(240,235,232), SubText=Color3.fromRGB(160,148,148),
+		Stroke=Color3.fromRGB(48,40,44), Success=Color3.fromRGB(95,200,130), Error=Color3.fromRGB(235,90,90),
+		Warning=Color3.fromRGB(235,180,70), Info=Color3.fromRGB(124,108,255),
+	},
+	BlackElegan = {
+		Background=Color3.fromRGB(13,13,15), Sidebar=Color3.fromRGB(9,9,11), Section=Color3.fromRGB(18,18,21),
+		Element=Color3.fromRGB(22,21,24), ElementHover=Color3.fromRGB(30,28,32), Accent=Color3.fromRGB(196,166,90),
+		AccentHover=Color3.fromRGB(214,186,115), Text=Color3.fromRGB(232,228,220), SubText=Color3.fromRGB(135,128,118),
+		Stroke=Color3.fromRGB(40,37,32), Success=Color3.fromRGB(110,180,120), Error=Color3.fromRGB(200,90,80),
+		Warning=Color3.fromRGB(196,166,90), Info=Color3.fromRGB(140,150,190),
+	},
+	Midnight = {
+		Background=Color3.fromRGB(10,12,20), Sidebar=Color3.fromRGB(7,9,16), Section=Color3.fromRGB(14,17,28),
+		Element=Color3.fromRGB(18,22,36), ElementHover=Color3.fromRGB(24,29,46), Accent=Color3.fromRGB(80,120,255),
+		AccentHover=Color3.fromRGB(105,140,255), Text=Color3.fromRGB(225,230,245), SubText=Color3.fromRGB(120,130,160),
+		Stroke=Color3.fromRGB(30,36,54), Success=Color3.fromRGB(70,200,150), Error=Color3.fromRGB(230,80,100),
+		Warning=Color3.fromRGB(230,170,60), Info=Color3.fromRGB(80,150,255),
+	},
+	Crimson = {
+		Background=Color3.fromRGB(18,12,13), Sidebar=Color3.fromRGB(14,9,10), Section=Color3.fromRGB(24,16,17),
+		Element=Color3.fromRGB(30,20,21), ElementHover=Color3.fromRGB(40,26,28), Accent=Color3.fromRGB(220,60,70),
+		AccentHover=Color3.fromRGB(235,85,95), Text=Color3.fromRGB(240,228,228), SubText=Color3.fromRGB(160,135,135),
+		Stroke=Color3.fromRGB(48,30,32), Success=Color3.fromRGB(100,190,120), Error=Color3.fromRGB(235,70,80),
+		Warning=Color3.fromRGB(230,160,60), Info=Color3.fromRGB(120,140,210),
+	},
+	Ocean = {
+		Background=Color3.fromRGB(10,18,22), Sidebar=Color3.fromRGB(7,14,18), Section=Color3.fromRGB(14,24,29),
+		Element=Color3.fromRGB(18,30,36), ElementHover=Color3.fromRGB(24,38,45), Accent=Color3.fromRGB(45,180,200),
+		AccentHover=Color3.fromRGB(70,200,218), Text=Color3.fromRGB(225,240,242), SubText=Color3.fromRGB(120,150,155),
+		Stroke=Color3.fromRGB(28,44,50), Success=Color3.fromRGB(80,200,150), Error=Color3.fromRGB(220,90,90),
+		Warning=Color3.fromRGB(220,180,70), Info=Color3.fromRGB(60,170,220),
+	},
+	Forest = {
+		Background=Color3.fromRGB(13,18,14), Sidebar=Color3.fromRGB(10,14,11), Section=Color3.fromRGB(18,24,19),
+		Element=Color3.fromRGB(23,30,24), ElementHover=Color3.fromRGB(30,38,31), Accent=Color3.fromRGB(95,180,100),
+		AccentHover=Color3.fromRGB(120,200,125), Text=Color3.fromRGB(228,236,226), SubText=Color3.fromRGB(135,150,132),
+		Stroke=Color3.fromRGB(34,42,33), Success=Color3.fromRGB(95,180,100), Error=Color3.fromRGB(220,90,85),
+		Warning=Color3.fromRGB(220,180,70), Info=Color3.fromRGB(90,160,180),
+	},
+	Sunset = {
+		Background=Color3.fromRGB(20,14,16), Sidebar=Color3.fromRGB(16,11,13), Section=Color3.fromRGB(26,18,20),
+		Element=Color3.fromRGB(33,23,25), ElementHover=Color3.fromRGB(42,30,32), Accent=Color3.fromRGB(245,130,80),
+		AccentHover=Color3.fromRGB(250,150,100), Text=Color3.fromRGB(242,230,225), SubText=Color3.fromRGB(165,140,135),
+		Stroke=Color3.fromRGB(50,34,34), Success=Color3.fromRGB(110,190,120), Error=Color3.fromRGB(230,80,85),
+		Warning=Color3.fromRGB(245,180,70), Info=Color3.fromRGB(210,110,160),
+	},
+	Lavender = {
+		Background=Color3.fromRGB(18,16,22), Sidebar=Color3.fromRGB(14,13,18), Section=Color3.fromRGB(24,21,29),
+		Element=Color3.fromRGB(30,27,36), ElementHover=Color3.fromRGB(38,34,45), Accent=Color3.fromRGB(170,140,235),
+		AccentHover=Color3.fromRGB(190,162,245), Text=Color3.fromRGB(235,230,242), SubText=Color3.fromRGB(150,140,165),
+		Stroke=Color3.fromRGB(44,38,52), Success=Color3.fromRGB(110,195,140), Error=Color3.fromRGB(225,95,110),
+		Warning=Color3.fromRGB(225,175,80), Info=Color3.fromRGB(140,160,235),
+	},
+	Cyberpunk = {
+		Background=Color3.fromRGB(8,8,14), Sidebar=Color3.fromRGB(5,5,10), Section=Color3.fromRGB(12,12,20),
+		Element=Color3.fromRGB(16,16,26), ElementHover=Color3.fromRGB(22,20,34), Accent=Color3.fromRGB(255,40,160),
+		AccentHover=Color3.fromRGB(255,75,180), Text=Color3.fromRGB(230,245,250), SubText=Color3.fromRGB(110,160,175),
+		Stroke=Color3.fromRGB(35,30,55), Success=Color3.fromRGB(60,235,180), Error=Color3.fromRGB(255,60,90),
+		Warning=Color3.fromRGB(255,210,40), Info=Color3.fromRGB(60,200,255),
+	},
+	Rose = {
+		Background=Color3.fromRGB(20,14,17), Sidebar=Color3.fromRGB(16,11,13), Section=Color3.fromRGB(27,18,21),
+		Element=Color3.fromRGB(34,23,27), ElementHover=Color3.fromRGB(44,30,35), Accent=Color3.fromRGB(235,95,150),
+		AccentHover=Color3.fromRGB(245,120,170), Text=Color3.fromRGB(243,230,234), SubText=Color3.fromRGB(170,140,150),
+		Stroke=Color3.fromRGB(52,35,40), Success=Color3.fromRGB(110,195,140), Error=Color3.fromRGB(230,85,95),
+		Warning=Color3.fromRGB(235,175,75), Info=Color3.fromRGB(170,130,220),
+	},
+	Gold = {
+		Background=Color3.fromRGB(17,15,10), Sidebar=Color3.fromRGB(13,11,7), Section=Color3.fromRGB(23,20,13),
+		Element=Color3.fromRGB(29,25,16), ElementHover=Color3.fromRGB(38,32,20), Accent=Color3.fromRGB(230,188,90),
+		AccentHover=Color3.fromRGB(240,205,120), Text=Color3.fromRGB(240,232,215), SubText=Color3.fromRGB(165,150,120),
+		Stroke=Color3.fromRGB(46,38,24), Success=Color3.fromRGB(120,195,120), Error=Color3.fromRGB(220,95,85),
+		Warning=Color3.fromRGB(230,188,90), Info=Color3.fromRGB(150,170,210),
+	},
+	Arctic = {
+		Background=Color3.fromRGB(232,238,244), Sidebar=Color3.fromRGB(245,249,252), Section=Color3.fromRGB(222,230,238),
+		Element=Color3.fromRGB(255,255,255), ElementHover=Color3.fromRGB(213,224,235), Accent=Color3.fromRGB(50,140,210),
+		AccentHover=Color3.fromRGB(75,160,225), Text=Color3.fromRGB(25,35,45), SubText=Color3.fromRGB(95,115,135),
+		Stroke=Color3.fromRGB(200,212,225), Success=Color3.fromRGB(40,160,100), Error=Color3.fromRGB(210,70,70),
+		Warning=Color3.fromRGB(195,140,20), Info=Color3.fromRGB(50,140,210),
+	},
+	Vampire = {
+		Background=Color3.fromRGB(14,10,12), Sidebar=Color3.fromRGB(10,7,9), Section=Color3.fromRGB(19,14,16),
+		Element=Color3.fromRGB(25,18,20), ElementHover=Color3.fromRGB(33,23,26), Accent=Color3.fromRGB(160,30,50),
+		AccentHover=Color3.fromRGB(185,45,65), Text=Color3.fromRGB(232,218,218), SubText=Color3.fromRGB(140,115,118),
+		Stroke=Color3.fromRGB(40,26,28), Success=Color3.fromRGB(90,170,110), Error=Color3.fromRGB(220,60,75),
+		Warning=Color3.fromRGB(210,150,60), Info=Color3.fromRGB(130,110,150),
+	},
+	Mint = {
+		Background=Color3.fromRGB(14,19,18), Sidebar=Color3.fromRGB(10,15,14), Section=Color3.fromRGB(19,25,24),
+		Element=Color3.fromRGB(24,32,30), ElementHover=Color3.fromRGB(31,41,38), Accent=Color3.fromRGB(80,215,180),
+		AccentHover=Color3.fromRGB(105,225,195), Text=Color3.fromRGB(225,238,234), SubText=Color3.fromRGB(125,150,144),
+		Stroke=Color3.fromRGB(34,44,41), Success=Color3.fromRGB(80,215,180), Error=Color3.fromRGB(225,95,95),
+		Warning=Color3.fromRGB(225,180,75), Info=Color3.fromRGB(85,170,210),
+	},
+	Royal = {
+		Background=Color3.fromRGB(12,12,22), Sidebar=Color3.fromRGB(9,9,17), Section=Color3.fromRGB(17,17,30),
+		Element=Color3.fromRGB(22,22,38), ElementHover=Color3.fromRGB(29,29,48), Accent=Color3.fromRGB(130,100,235),
+		AccentHover=Color3.fromRGB(150,122,245), Text=Color3.fromRGB(232,230,245), SubText=Color3.fromRGB(140,138,170),
+		Stroke=Color3.fromRGB(38,36,58), Success=Color3.fromRGB(95,195,150), Error=Color3.fromRGB(225,85,100),
+		Warning=Color3.fromRGB(225,180,80), Info=Color3.fromRGB(130,100,235),
+	},
+	Coral = {
+		Background=Color3.fromRGB(20,15,15), Sidebar=Color3.fromRGB(16,12,12), Section=Color3.fromRGB(27,20,19),
+		Element=Color3.fromRGB(34,25,24), ElementHover=Color3.fromRGB(44,32,31), Accent=Color3.fromRGB(255,110,95),
+		AccentHover=Color3.fromRGB(255,135,120), Text=Color3.fromRGB(243,232,228), SubText=Color3.fromRGB(170,145,140),
+		Stroke=Color3.fromRGB(52,37,36), Success=Color3.fromRGB(110,195,140), Error=Color3.fromRGB(255,110,95),
+		Warning=Color3.fromRGB(245,180,80), Info=Color3.fromRGB(120,160,220),
+	},
+	Slate = {
+		Background=Color3.fromRGB(20,22,25), Sidebar=Color3.fromRGB(16,18,21), Section=Color3.fromRGB(26,28,32),
+		Element=Color3.fromRGB(33,36,40), ElementHover=Color3.fromRGB(42,45,50), Accent=Color3.fromRGB(110,140,165),
+		AccentHover=Color3.fromRGB(130,160,185), Text=Color3.fromRGB(228,232,236), SubText=Color3.fromRGB(135,145,155),
+		Stroke=Color3.fromRGB(46,50,55), Success=Color3.fromRGB(100,190,140), Error=Color3.fromRGB(215,95,95),
+		Warning=Color3.fromRGB(215,175,80), Info=Color3.fromRGB(110,140,165),
+	},
+	Lime = {
+		Background=Color3.fromRGB(15,18,12), Sidebar=Color3.fromRGB(11,14,9), Section=Color3.fromRGB(20,24,16),
+		Element=Color3.fromRGB(26,31,21), ElementHover=Color3.fromRGB(34,40,27), Accent=Color3.fromRGB(170,225,70),
+		AccentHover=Color3.fromRGB(190,235,95), Text=Color3.fromRGB(232,238,222), SubText=Color3.fromRGB(140,150,125),
+		Stroke=Color3.fromRGB(40,46,32), Success=Color3.fromRGB(170,225,70), Error=Color3.fromRGB(225,95,90),
+		Warning=Color3.fromRGB(225,185,75), Info=Color3.fromRGB(100,180,170),
+	},
+	Obsidian = {
+		Background=Color3.fromRGB(9,9,11), Sidebar=Color3.fromRGB(6,6,8), Section=Color3.fromRGB(13,13,16),
+		Element=Color3.fromRGB(17,17,21), ElementHover=Color3.fromRGB(23,23,28), Accent=Color3.fromRGB(70,200,210),
+		AccentHover=Color3.fromRGB(95,215,225), Text=Color3.fromRGB(225,232,234), SubText=Color3.fromRGB(115,128,132),
+		Stroke=Color3.fromRGB(28,28,33), Success=Color3.fromRGB(80,200,140), Error=Color3.fromRGB(220,90,95),
+		Warning=Color3.fromRGB(220,180,75), Info=Color3.fromRGB(70,200,210),
+	},
 }
+
+local ThemeOrder = {
+	"Black","White","Kitsune","BlackElegan","Midnight","Crimson","Ocean","Forest","Sunset","Lavender",
+	"Cyberpunk","Rose","Gold","Arctic","Vampire","Mint","Royal","Coral","Slate","Lime","Obsidian",
+}
+
+-- Theme aktif (default Kitsune, identitas warna proyek ini).
+-- Tabel ini di-mutate isinya saat ganti tema, supaya semua referensi
+-- `Theme.xxx` di seluruh file otomatis ikut berubah tanpa perlu rewiring.
+local Theme = {}
+for k, v in pairs(Themes.Kitsune) do Theme[k] = v end
+
+local ActiveThemeName = "Kitsune"
+local ThemeChangedListeners = {}
 
 local FONT = Enum.Font.GothamMedium
 local FONT_BOLD = Enum.Font.GothamBold
@@ -137,6 +292,27 @@ end
 
 local function tween(obj, props, duration, style)
 	TweenService:Create(obj, TweenInfo.new(duration or 0.18, style or Enum.EasingStyle.Quad), props):Play()
+end
+
+-- makeIcon(icon, size, color)
+-- Menerima "rbxassetid://..." atau angka ID gambar. Dipakai untuk
+-- menampilkan icon di samping label komponen (misalnya hasil upload
+-- icon Lucide kamu sendiri ke Roblox). Return nil kalau icon tidak diisi,
+-- jadi layout otomatis menyesuaikan (geser label ke kiri).
+local function makeIcon(icon, size, color)
+	if not icon or icon == "" then return nil end
+	local assetId = icon
+	if type(icon) == "number" then
+		assetId = "rbxassetid://" .. tostring(icon)
+	elseif type(icon) == "string" and not icon:match("^rbxasset") then
+		assetId = "rbxassetid://" .. icon
+	end
+	return create("ImageLabel", {
+		Image = assetId,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(size or 16, size or 16),
+		ImageColor3 = color or Theme.Text,
+	})
 end
 
 local function makeDraggable(frame, dragHandle)
@@ -461,12 +637,12 @@ function UILibrary:CreateWindow(config)
 end
 
 -- ============ TAB ============
-function UILibrary.CreateTab(self, name)
+function UILibrary.CreateTab(self, name, icon)
 	local Sidebar = self.Sidebar
 	local Body = self.Body
 
 	local TabButton = create("TextButton", {
-		Text = name,
+		Text = "",
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.SubText,
@@ -476,6 +652,26 @@ function UILibrary.CreateTab(self, name)
 		AutoButtonColor = false,
 		Parent = Sidebar,
 	}, { corner(6) })
+
+	local iconInst = makeIcon(icon, 15, Theme.SubText)
+	local labelOffsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(10, 8.5)
+		iconInst.Parent = TabButton
+		labelOffsetX = 32
+	end
+
+	local TabLabel = create("TextLabel", {
+		Text = name,
+		Font = FONT,
+		TextSize = 13,
+		TextColor3 = Theme.SubText,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -labelOffsetX - 6, 1, 0),
+		Position = UDim2.fromOffset(labelOffsetX, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = TabButton,
+	})
 
 	local Page = create("ScrollingFrame", {
 		Name = name .. "Page",
@@ -502,16 +698,20 @@ function UILibrary.CreateTab(self, name)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}).Parent = Page
 
-	local Tab = { Page = Page, Button = TabButton, Window = self }
+	local Tab = { Page = Page, Button = TabButton, Label = TabLabel, Icon = iconInst, Window = self }
 	setmetatable(Tab, UILibrary)
 
 	local function selectTab()
 		for _, t in pairs(self.Tabs) do
 			t.Page.Visible = false
-			tween(t.Button, {BackgroundTransparency = 1, TextColor3 = Theme.SubText}, 0.15)
+			tween(t.Button, {BackgroundTransparency = 1}, 0.15)
+			tween(t.Label, {TextColor3 = Theme.SubText}, 0.15)
+			if t.Icon then tween(t.Icon, {ImageColor3 = Theme.SubText}, 0.15) end
 		end
 		Page.Visible = true
-		tween(TabButton, {BackgroundTransparency = 0, TextColor3 = Theme.Text}, 0.15)
+		tween(TabButton, {BackgroundTransparency = 0}, 0.15)
+		tween(TabLabel, {TextColor3 = Theme.Text}, 0.15)
+		if iconInst then tween(iconInst, {ImageColor3 = Theme.Text}, 0.15) end
 	end
 
 	TabButton.MouseButton1Click:Connect(selectTab)
@@ -562,7 +762,16 @@ function UILibrary.CreateSection(self, name)
 end
 
 -- ============ ELEMENT: LABEL ============
-function UILibrary.CreateLabel(self, text)
+-- Bisa dipanggil dengan string biasa: Tab:CreateLabel("teks")
+-- atau dengan tabel kalau mau pakai icon: Tab:CreateLabel({Text="teks", Icon="rbxassetid://123"})
+function UILibrary.CreateLabel(self, arg)
+	local text, icon
+	if type(arg) == "table" then
+		text, icon = arg.Text, arg.Icon
+	else
+		text = arg
+	end
+
 	local Holder = create("Frame", {
 		BackgroundColor3 = Theme.Section,
 		Size = UDim2.new(1, 0, 0, 0),
@@ -570,15 +779,23 @@ function UILibrary.CreateLabel(self, text)
 		Parent = self.Page,
 	}, { corner(8) })
 
+	local iconInst = makeIcon(icon, 15, Theme.SubText)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 9)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = text or "",
 		Font = FONT,
 		TextSize = 12,
 		TextColor3 = Theme.SubText,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -24, 0, 0),
+		Size = UDim2.new(1, -offsetX - 12, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		Position = UDim2.fromOffset(12, 8),
+		Position = UDim2.fromOffset(offsetX, 8),
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
@@ -593,6 +810,7 @@ end
 function UILibrary.CreateButton(self, config)
 	config = config or {}
 	local name = config.Name or "Button"
+	local icon = config.Icon
 	local callback = config.Callback or function() end
 
 	local Holder = create("TextButton", {
@@ -603,14 +821,22 @@ function UILibrary.CreateButton(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 16, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 34
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -24, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(1, -offsetX - 12, 1, 0),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -631,6 +857,7 @@ end
 function UILibrary.CreateToggle(self, config)
 	config = config or {}
 	local name = config.Name or "Toggle"
+	local icon = config.Icon
 	local state = config.CurrentValue or false
 	local callback = config.Callback or function() end
 
@@ -640,14 +867,22 @@ function UILibrary.CreateToggle(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 16, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 34
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -60, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(1, -offsetX - 60, 1, 0),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -692,6 +927,7 @@ end
 function UILibrary.CreateSlider(self, config)
 	config = config or {}
 	local name = config.Name or "Slider"
+	local icon = config.Icon
 	local range = config.Range or {0, 100}
 	local increment = config.Increment or 1
 	local value = config.CurrentValue or range[1]
@@ -705,14 +941,22 @@ function UILibrary.CreateSlider(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 5)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -70, 0, 24),
-		Position = UDim2.fromOffset(12, 4),
+		Size = UDim2.new(1, -offsetX - 70, 0, 24),
+		Position = UDim2.fromOffset(offsetX, 4),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -793,6 +1037,7 @@ end
 function UILibrary.CreateDropdown(self, config)
 	config = config or {}
 	local name = config.Name or "Dropdown"
+	local icon = config.Icon
 	local options = config.Options or {}
 	local current = config.CurrentOption or options[1] or ""
 	local callback = config.Callback or function() end
@@ -805,14 +1050,22 @@ function UILibrary.CreateDropdown(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(0.5, -12, 0, 38),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(0.5, -offsetX, 0, 38),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -878,6 +1131,7 @@ end
 function UILibrary.CreateInput(self, config)
 	config = config or {}
 	local name = config.Name or "Input"
+	local icon = config.Icon
 	local placeholder = config.PlaceholderText or "Enter text..."
 	local callback = config.Callback or function() end
 
@@ -887,14 +1141,22 @@ function UILibrary.CreateInput(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(0.4, -12, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(0.4, -offsetX, 1, 0),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -927,6 +1189,7 @@ end
 function UILibrary.CreateColorPicker(self, config)
 	config = config or {}
 	local name = config.Name or "Color Picker"
+	local icon = config.Icon
 	local current = config.CurrentColor or Color3.fromRGB(255, 255, 255)
 	local callback = config.Callback or function() end
 
@@ -937,14 +1200,22 @@ function UILibrary.CreateColorPicker(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -60, 0, 38),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(1, -offsetX - 60, 0, 38),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -1040,6 +1311,7 @@ end
 function UILibrary.CreateKeybind(self, config)
 	config = config or {}
 	local name = config.Name or "Keybind"
+	local icon = config.Icon
 	local current = config.CurrentKeybind or "None"
 	local callback = config.Callback or function() end
 
@@ -1049,14 +1321,22 @@ function UILibrary.CreateKeybind(self, config)
 		Parent = self.Page,
 	}, { corner(8), stroke() })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local offsetX = 12
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+		offsetX = 32
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -100, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(1, -offsetX - 100, 1, 0),
+		Position = UDim2.fromOffset(offsetX, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -1127,6 +1407,7 @@ local TIER_COLORS = {
 function UILibrary.CreateGamepassTier(self, config)
 	config = config or {}
 	local name = config.Name or "Premium Pass"
+	local icon = config.Icon
 	local tier = config.Tier or "Bronze"
 	local gamepassId = config.GamepassId
 	local price = config.Price
@@ -1148,14 +1429,22 @@ function UILibrary.CreateGamepassTier(self, config)
 		Parent = Holder,
 	}, { corner(2) })
 
+	local iconInst = makeIcon(icon, 15, Theme.Text)
+	local labelOffsetX = 18
+	if iconInst then
+		iconInst.Position = UDim2.fromOffset(18, 9)
+		iconInst.Parent = Holder
+		labelOffsetX = 38
+	end
+
 	create("TextLabel", {
 		Text = name,
 		Font = FONT_BOLD,
 		TextSize = 13,
 		TextColor3 = Theme.Text,
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(18, 8),
-		Size = UDim2.new(1, -140, 0, 18),
+		Position = UDim2.fromOffset(labelOffsetX, 8),
+		Size = UDim2.new(1, -labelOffsetX - 122, 0, 18),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -1167,8 +1456,8 @@ function UILibrary.CreateGamepassTier(self, config)
 		TextSize = 11,
 		TextColor3 = Theme.SubText,
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(18, 27),
-		Size = UDim2.new(1, -140, 0, 16),
+		Position = UDim2.fromOffset(labelOffsetX, 27),
+		Size = UDim2.new(1, -labelOffsetX - 122, 0, 16),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = Holder,
 	})
@@ -1254,6 +1543,165 @@ function UILibrary.CreateGamepassTier(self, config)
 		Refresh = checkOwnership,
 		IsOwned = function() return owned end,
 	}
+end
+
+-- ============ SOCIAL / LINK BUTTON ============
+-- Tombol yang membuka URL eksternal (YouTube, Discord, dll) lewat browser
+-- bawaan perangkat pemain. Default-nya channel YouTube pembuat library ini,
+-- tapi bisa diganti bebas lewat parameter URL.
+--
+-- CONTOH PEMAKAIAN:
+--
+-- Tab:CreateSocialButton({
+--     Name = "Subscribe di YouTube",
+--     URL = "https://youtube.com/@KitsuneeIsMe",
+--     Icon = "▶", -- opsional, default "▶"
+-- })
+
+function UILibrary.CreateSocialButton(self, config)
+	config = config or {}
+	local name = config.Name or "Open Link"
+	local url = config.URL or "https://youtube.com/@KitsuneeIsMe"
+	local icon = config.Icon or "▶"
+
+	local Holder = create("TextButton", {
+		Text = "",
+		BackgroundColor3 = Theme.Element,
+		Size = UDim2.new(1, 0, 0, 38),
+		AutoButtonColor = false,
+		Parent = self.Page,
+	}, { corner(8), stroke() })
+
+	-- Icon bisa berupa teks/emoji singkat ("▶", "💬") ATAU rbxassetid gambar
+	-- (misal hasil upload icon Lucide kamu sendiri ke Roblox).
+	local isImageIcon = type(icon) == "number" or (type(icon) == "string" and (icon:match("^rbxasset") or icon:match("^%d+$")))
+	if isImageIcon then
+		local iconInst = makeIcon(icon, 16, Theme.Accent)
+		iconInst.Position = UDim2.fromOffset(12, 11)
+		iconInst.Parent = Holder
+	else
+		create("TextLabel", {
+			Text = icon,
+			Font = FONT_BOLD,
+			TextSize = 13,
+			TextColor3 = Theme.Accent,
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(24, 38),
+			Position = UDim2.fromOffset(12, 0),
+			Parent = Holder,
+		})
+	end
+
+	create("TextLabel", {
+		Text = name,
+		Font = FONT,
+		TextSize = 13,
+		TextColor3 = Theme.Text,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -48, 1, 0),
+		Position = UDim2.fromOffset(36, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	Holder.MouseEnter:Connect(function() tween(Holder, {BackgroundColor3 = Theme.ElementHover}, 0.15) end)
+	Holder.MouseLeave:Connect(function() tween(Holder, {BackgroundColor3 = Theme.Element}, 0.15) end)
+
+	Holder.MouseButton1Click:Connect(function()
+		-- OpenBrowserWindowAsync hanya berjalan di platform yang mendukungnya
+		-- (PC/mobile app Roblox). Dibungkus pcall supaya tidak error di platform lain.
+		local ok, err = pcall(function()
+			GuiService:OpenBrowserWindowAsync(url)
+		end)
+		if not ok then
+			warn("[UILibrary] Gagal membuka link:", err)
+			UILibrary:Notify({
+				Title = "Tidak bisa membuka link",
+				Content = "Coba buka manual: " .. url,
+				Type = "Warning",
+			})
+		end
+	end)
+
+	return Holder
+end
+
+-- ============ THEME FUNCTIONS ============
+-- UILibrary:GetThemes() -> daftar 20 nama tema yang tersedia, dalam urutan tetap.
+function UILibrary:GetThemes()
+	local list = {}
+	for _, name in ipairs(ThemeOrder) do table.insert(list, name) end
+	return list
+end
+
+-- UILibrary:GetActiveTheme() -> nama tema yang sedang aktif (string)
+function UILibrary:GetActiveTheme()
+	return ActiveThemeName
+end
+
+-- UILibrary:SetTheme(name)
+-- Mengganti tema aktif. Paling efektif dipanggil SEBELUM CreateWindow,
+-- karena warna sudah "dibakar" ke setiap komponen saat dibuat — komponen
+-- yang dibuat SEBELUM SetTheme dipanggil tidak otomatis berubah warna.
+-- Kalau perlu ganti tema di tengah jalan (live), cara paling aman adalah
+-- memanggil SetTheme lalu membuat ulang window dari awal.
+function UILibrary:SetTheme(name)
+	local preset = Themes[name]
+	if not preset then
+		warn("[UILibrary] Tema '" .. tostring(name) .. "' tidak ditemukan. Gunakan UILibrary:GetThemes() untuk lihat daftar nama yang valid.")
+		return false
+	end
+	for k, v in pairs(preset) do
+		Theme[k] = v
+	end
+	ActiveThemeName = name
+	for _, listener in ipairs(ThemeChangedListeners) do
+		pcall(listener, name)
+	end
+	return true
+end
+
+-- UILibrary:OnThemeChanged(callback)
+-- Daftarkan fungsi yang dipanggil setiap kali SetTheme dipakai, kalau kamu
+-- mau bikin logic custom (misalnya re-render sesuatu) saat tema berganti.
+function UILibrary:OnThemeChanged(callback)
+	table.insert(ThemeChangedListeners, callback)
+end
+
+-- ============ THEME PICKER (dropdown di dalam UI) ============
+-- Komponen siap pakai untuk ditaruh di tab "Appearance"/"Settings".
+-- Memanggil UILibrary:SetTheme() saat opsi dipilih. Karena warna komponen
+-- lain sudah dibuat sebelumnya, paling rapi dipakai bersama rekomendasi:
+-- minta pemain reopen menu / panggil ulang CreateWindow setelah ganti tema.
+--
+-- CONTOH:
+-- Tab:CreateThemePicker({
+--     Name = "UI Theme",
+--     OnChange = function(themeName)
+--         print("Tema diganti ke:", themeName)
+--         -- contoh: tampilkan notif minta reload window
+--     end
+-- })
+function UILibrary.CreateThemePicker(self, config)
+	config = config or {}
+	local name = config.Name or "UI Theme"
+	local onChange = config.OnChange or function() end
+
+	return self:CreateDropdown({
+		Name = name,
+		Options = ThemeOrder,
+		CurrentOption = ActiveThemeName,
+		Callback = function(selected)
+			UILibrary:SetTheme(selected)
+			UILibrary:Notify({
+				Title = "Tema diganti",
+				Content = "Tema \"" .. selected .. "\" aktif. Buka ulang menu untuk melihat perubahan penuh.",
+				Type = "Info",
+			})
+			local ok, err = pcall(onChange, selected)
+			if not ok then warn("[UILibrary] ThemePicker OnChange error:", err) end
+		end
+	})
 end
 
 return UILibrary
