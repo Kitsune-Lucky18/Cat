@@ -1,5 +1,5 @@
 --[[
-	UILibrary.lua  (v2,234 — Complete Edition)
+	UILibrary.lua  (v2 — Complete Edition)
 	Custom modern UI Library untuk Roblox — dark theme, rounded, tab-based,
 	lengkap dengan Notification system. Dibuat untuk dipasang sebagai
 	ModuleScript di game-mu sendiri (settings menu, admin panel, dsb).
@@ -1101,8 +1101,25 @@ function UILibrary.CreateDropdown(self, config)
 	local name = config.Name or "Dropdown"
 	local icon = config.Icon
 	local options = config.Options or {}
+	local multiSelect = config.MultiSelect or false
 	local current = config.CurrentOption or options[1] or ""
+	local selected = {}
+	if multiSelect then
+		for _, v in ipairs(config.CurrentOptions or {}) do selected[v] = true end
+	end
 	local callback = config.Callback or function() end
+
+	local function selectedCount()
+		local count = 0
+		for _ in pairs(selected) do count += 1 end
+		return count
+	end
+
+	local function selectedList()
+		local list = {}
+		for opt in pairs(selected) do table.insert(list, opt) end
+		return list
+	end
 
 	local Holder = create("Frame", {
 		BackgroundColor3 = Theme.Element,
@@ -1133,7 +1150,7 @@ function UILibrary.CreateDropdown(self, config)
 	})
 
 	local SelectedBtn = create("TextButton", {
-		Text = current,
+		Text = multiSelect and (selectedCount() .. " dipilih") or current,
 		Font = FONT,
 		TextSize = 12,
 		TextColor3 = Theme.SubText,
@@ -1188,32 +1205,63 @@ function UILibrary.CreateDropdown(self, config)
 		Holder.Size = state and UDim2.new(1, 0, 0, 38 + #options * 26 + 6) or UDim2.new(1, 0, 0, 38)
 	end
 
+	local optionButtons = {}
+
 	for _, opt in ipairs(options) do
 		local OptBtn = create("TextButton", {
 			Text = opt,
 			Font = FONT,
 			TextSize = 12,
 			TextColor3 = Theme.Text,
-			BackgroundColor3 = Theme.ElementHover,
-			BackgroundTransparency = 1,
+			BackgroundColor3 = multiSelect and Theme.Accent or Theme.ElementHover,
+			BackgroundTransparency = (multiSelect and selected[opt]) and 0.5 or 1,
 			Size = UDim2.new(1, 0, 0, 26),
 			ZIndex = 3,
 			Parent = ListFrame,
 		})
-		OptBtn.MouseEnter:Connect(function() tween(OptBtn, {BackgroundTransparency = 0}, 0.1) end)
-		OptBtn.MouseLeave:Connect(function() tween(OptBtn, {BackgroundTransparency = 1}, 0.1) end)
+		optionButtons[opt] = OptBtn
+
+		OptBtn.MouseEnter:Connect(function()
+			if not (multiSelect and selected[opt]) then tween(OptBtn, {BackgroundTransparency = 0.8}, 0.1) end
+		end)
+		OptBtn.MouseLeave:Connect(function()
+			if not (multiSelect and selected[opt]) then tween(OptBtn, {BackgroundTransparency = 1}, 0.1) end
+		end)
+
 		OptBtn.MouseButton1Click:Connect(function()
-			current = opt
-			SelectedBtn.Text = current
-			setOpen(false)
-			local ok, err = pcall(callback, current)
-			if not ok then warn("[UILibrary] Dropdown callback error:", err) end
+			if multiSelect then
+				selected[opt] = not selected[opt] or nil
+				tween(OptBtn, { BackgroundTransparency = selected[opt] and 0.5 or 1 }, 0.1)
+				SelectedBtn.Text = selectedCount() .. " dipilih"
+				local ok, err = pcall(callback, selectedList())
+				if not ok then warn("[UILibrary] Dropdown callback error:", err) end
+			else
+				current = opt
+				SelectedBtn.Text = current
+				setOpen(false)
+				local ok, err = pcall(callback, current)
+				if not ok then warn("[UILibrary] Dropdown callback error:", err) end
+			end
 		end)
 	end
 
 	SelectedBtn.MouseButton1Click:Connect(function() setOpen(not open) end)
 
-	return { Set = function(opt) current = opt; SelectedBtn.Text = opt end }
+	if multiSelect then
+		return {
+			Set = function(list)
+				selected = {}
+				for _, v in ipairs(list) do selected[v] = true end
+				for opt, btn in pairs(optionButtons) do
+					btn.BackgroundTransparency = selected[opt] and 0.5 or 1
+				end
+				SelectedBtn.Text = selectedCount() .. " dipilih"
+			end,
+			Get = function() return selectedList() end,
+		}
+	end
+
+	return { Set = function(opt) current = opt; SelectedBtn.Text = opt end, Get = function() return current end }
 end
 
 -- ============ ELEMENT: INPUT (Textbox) ============
@@ -1713,6 +1761,198 @@ function UILibrary.CreateSocialButton(self, config)
 	end)
 
 	return Holder
+end
+
+-- ============ ELEMENT: DIVIDER ============
+-- Garis pembatas sederhana, lebih ringan dari Section (tanpa label).
+function UILibrary.CreateDivider(self)
+	return create("Frame", {
+		BackgroundColor3 = Theme.Stroke,
+		Size = UDim2.new(1, 0, 0, 1),
+		Parent = self.Page,
+	})
+end
+
+-- ============ ELEMENT: BADGE ============
+-- Status indicator kecil dengan dot warna, untuk nampilin status singkat
+-- (online/offline, aktif/nonaktif, dll) tanpa perlu komponen Toggle penuh.
+--
+-- Tab:CreateBadge({ Text = "Server: Online", Type = "Success" })
+function UILibrary.CreateBadge(self, config)
+	config = config or {}
+	local colorMap = { Success = Theme.Success, Error = Theme.Error, Warning = Theme.Warning, Info = Theme.Info }
+	local dotColor = colorMap[config.Type] or Theme.Accent
+
+	local Holder = create("Frame", {
+		BackgroundColor3 = Theme.Element,
+		Size = UDim2.new(1, 0, 0, 34),
+		Parent = self.Page,
+	}, { corner(8), stroke() })
+
+	create("Frame", {
+		Size = UDim2.fromOffset(8, 8),
+		Position = UDim2.fromOffset(14, 13),
+		BackgroundColor3 = dotColor,
+		Parent = Holder,
+	}, { corner(4) })
+
+	create("TextLabel", {
+		Text = config.Text or "Status",
+		Font = FONT,
+		TextSize = 12.5,
+		TextColor3 = Theme.Text,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(30, 0),
+		Size = UDim2.new(1, -42, 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	return Holder
+end
+
+-- ============ ELEMENT: STAT CARD ============
+-- Menampilkan angka besar + label kecil, cocok untuk dashboard ringkasan
+-- (misal "Coins: 1200", "Kills: 47").
+--
+-- local coinsStat = Tab:CreateStatCard({ Label = "Coins", Value = 1200 })
+-- coinsStat.Set(1500) -- update nilai dari script lain
+function UILibrary.CreateStatCard(self, config)
+	config = config or {}
+	local Holder = create("Frame", {
+		BackgroundColor3 = Theme.Element,
+		Size = UDim2.new(1, 0, 0, 58),
+		Parent = self.Page,
+	}, { corner(9), stroke() })
+
+	create("TextLabel", {
+		Text = config.Label or "Stat",
+		Font = FONT,
+		TextSize = 11.5,
+		TextColor3 = Theme.SubText,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(14, 8),
+		Size = UDim2.new(1, -28, 0, 14),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	local ValueLabel = create("TextLabel", {
+		Text = tostring(config.Value or 0),
+		Font = FONT_BOLD,
+		TextSize = 20,
+		TextColor3 = Theme.Accent,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(14, 24),
+		Size = UDim2.new(1, -28, 0, 26),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	return { Set = function(v) ValueLabel.Text = tostring(v) end }
+end
+
+-- ============ ELEMENT: PROGRESS BAR ============
+-- Bar horizontal untuk menampilkan progres (loading, XP, durasi cooldown, dll).
+--
+-- local hpBar = Tab:CreateProgressBar({ Name = "Health", CurrentValue = 80, Max = 100 })
+-- hpBar.Set(45)
+function UILibrary.CreateProgressBar(self, config)
+	config = config or {}
+	local value = config.CurrentValue or 0
+	local max = config.Max or 100
+
+	local Holder = create("Frame", {
+		BackgroundColor3 = Theme.Element,
+		Size = UDim2.new(1, 0, 0, 46),
+		Parent = self.Page,
+	}, { corner(9), stroke() })
+
+	create("TextLabel", {
+		Text = config.Name or "Progress",
+		Font = FONT,
+		TextSize = 12.5,
+		TextColor3 = Theme.Text,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(14, 6),
+		Size = UDim2.new(1, -28, 0, 16),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	local Track = create("Frame", {
+		Size = UDim2.new(1, -28, 0, 6),
+		Position = UDim2.fromOffset(14, 30),
+		BackgroundColor3 = Theme.Stroke,
+		Parent = Holder,
+	}, { corner(3) })
+
+	local Fill = create("Frame", {
+		Size = UDim2.new(math.clamp(value / max, 0, 1), 0, 1, 0),
+		BackgroundColor3 = Theme.Accent,
+		Parent = Track,
+	}, { corner(3) })
+
+	return {
+		Set = function(v)
+			value = math.clamp(v, 0, max)
+			tween(Fill, { Size = UDim2.new(value / max, 0, 1, 0) }, 0.25)
+		end,
+	}
+end
+
+-- ============ ELEMENT: PROGRESS RING ============
+-- Ring melingkar untuk menampilkan persentase progres secara visual
+-- (cocok untuk loading circular, level indicator, dll).
+--
+-- local xpRing = Tab:CreateProgressRing({ Name = "Level 5 XP", CurrentValue = 60, Max = 100 })
+-- xpRing.Set(80)
+function UILibrary.CreateProgressRing(self, config)
+	config = config or {}
+	local value = config.CurrentValue or 0
+	local max = config.Max or 100
+
+	local Holder = create("Frame", {
+		BackgroundColor3 = Theme.Element,
+		Size = UDim2.new(1, 0, 0, 80),
+		Parent = self.Page,
+	}, { corner(9), stroke() })
+
+	local RingWrap = create("Frame", {
+		Size = UDim2.fromOffset(54, 54),
+		Position = UDim2.fromOffset(13, 13),
+		BackgroundColor3 = Theme.Section,
+		Parent = Holder,
+	}, { corner(27), stroke(Theme.Accent, 4) })
+
+	local PercentLabel = create("TextLabel", {
+		Text = math.floor(math.clamp(value / max, 0, 1) * 100) .. "%",
+		Font = FONT_BOLD,
+		TextSize = 13,
+		TextColor3 = Theme.Text,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Parent = RingWrap,
+	})
+
+	create("TextLabel", {
+		Text = config.Name or "",
+		Font = FONT,
+		TextSize = 12.5,
+		TextColor3 = Theme.Text,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(80, 28),
+		Size = UDim2.new(1, -94, 0, 20),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Holder,
+	})
+
+	return {
+		Set = function(v)
+			value = math.clamp(v, 0, max)
+			PercentLabel.Text = math.floor((value / max) * 100) .. "%"
+		end,
+	}
 end
 
 -- ============ THEME FUNCTIONS ============
