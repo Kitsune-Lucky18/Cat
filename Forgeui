@@ -1,0 +1,594 @@
+--[[
+	ForgeUI.lua
+	UI Library mandiri — loading screen, window, tab pills horizontal,
+	dan komponen lengkap (input controls + elemen visual). Identitas dan
+	struktur kode ditulis dari nol; tidak meniru drag-physics, shadow
+	layering, atau skema nama tema dari library Rayfield/Kitsune-style
+	mana pun. Tidak ada key system, tidak ada loadstring eksternal, tidak
+	ada setclipboard.
+
+	Taruh sebagai ModuleScript di ReplicatedStorage, namai "ForgeUI".
+
+	CONTOH PEMAKAIAN:
+
+	local ForgeUI = require(game.ReplicatedStorage.ForgeUI)
+
+	ForgeUI:ShowLoading({
+		Title = "Loading",
+		Duration = 1.8,
+		OnComplete = function()
+			local Window = ForgeUI:CreateWindow({
+				Title = "Game Settings",
+				SubTitle = "by YourName",
+				Theme = "Slate", -- Slate | Paper | Forge | Glacier | Ember | Orchid
+			})
+
+			local Tab = Window:CreateTab("Main")
+			Tab:CreateButton({ Name = "Click Me", Callback = function() print("clicked") end })
+		end
+	})
+]]
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local ForgeUI = {}
+ForgeUI.__index = ForgeUI
+
+-- ============ THEMES (palet independen, bukan turunan tema lain) ============
+local Themes = {
+	Slate = {
+		Background = Color3.fromRGB(19, 20, 23), Card = Color3.fromRGB(26, 27, 31), Elevated = Color3.fromRGB(33, 35, 40),
+		Accent = Color3.fromRGB(86, 168, 196), AccentDim = Color3.fromRGB(60, 130, 155),
+		Text = Color3.fromRGB(232, 234, 237), SubText = Color3.fromRGB(140, 146, 154),
+		Border = Color3.fromRGB(42, 44, 50), Good = Color3.fromRGB(96, 196, 132), Bad = Color3.fromRGB(220, 96, 96), Warn = Color3.fromRGB(222, 176, 78),
+		Light = false,
+	},
+	Paper = {
+		Background = Color3.fromRGB(241, 240, 236), Card = Color3.fromRGB(252, 251, 248), Elevated = Color3.fromRGB(232, 230, 224),
+		Accent = Color3.fromRGB(196, 92, 60), AccentDim = Color3.fromRGB(160, 72, 46),
+		Text = Color3.fromRGB(35, 32, 28), SubText = Color3.fromRGB(120, 114, 105),
+		Border = Color3.fromRGB(220, 216, 208), Good = Color3.fromRGB(70, 150, 95), Bad = Color3.fromRGB(190, 70, 70), Warn = Color3.fromRGB(180, 130, 30),
+		Light = true,
+	},
+	Forge = {
+		Background = Color3.fromRGB(20, 14, 12), Card = Color3.fromRGB(28, 20, 17), Elevated = Color3.fromRGB(36, 26, 22),
+		Accent = Color3.fromRGB(224, 110, 58), AccentDim = Color3.fromRGB(180, 84, 42),
+		Text = Color3.fromRGB(240, 230, 222), SubText = Color3.fromRGB(168, 142, 128),
+		Border = Color3.fromRGB(50, 36, 30), Good = Color3.fromRGB(120, 190, 110), Bad = Color3.fromRGB(220, 90, 80), Warn = Color3.fromRGB(230, 170, 60),
+		Light = false,
+	},
+	Glacier = {
+		Background = Color3.fromRGB(13, 18, 24), Card = Color3.fromRGB(19, 26, 34), Elevated = Color3.fromRGB(26, 35, 45),
+		Accent = Color3.fromRGB(94, 188, 224), AccentDim = Color3.fromRGB(64, 150, 184),
+		Text = Color3.fromRGB(226, 238, 244), SubText = Color3.fromRGB(122, 148, 164),
+		Border = Color3.fromRGB(32, 44, 56), Good = Color3.fromRGB(94, 200, 160), Bad = Color3.fromRGB(220, 100, 110), Warn = Color3.fromRGB(220, 180, 90),
+		Light = false,
+	},
+	Ember = {
+		Background = Color3.fromRGB(22, 12, 14), Card = Color3.fromRGB(30, 17, 19), Elevated = Color3.fromRGB(40, 22, 24),
+		Accent = Color3.fromRGB(232, 70, 92), AccentDim = Color3.fromRGB(186, 50, 70),
+		Text = Color3.fromRGB(244, 228, 228), SubText = Color3.fromRGB(176, 134, 136),
+		Border = Color3.fromRGB(54, 30, 32), Good = Color3.fromRGB(110, 190, 130), Bad = Color3.fromRGB(232, 70, 92), Warn = Color3.fromRGB(230, 160, 60),
+		Light = false,
+	},
+	Orchid = {
+		Background = Color3.fromRGB(18, 14, 22), Card = Color3.fromRGB(25, 20, 30), Elevated = Color3.fromRGB(33, 27, 40),
+		Accent = Color3.fromRGB(178, 110, 224), AccentDim = Color3.fromRGB(140, 78, 184),
+		Text = Color3.fromRGB(236, 228, 244), SubText = Color3.fromRGB(154, 138, 168),
+		Border = Color3.fromRGB(44, 36, 54), Good = Color3.fromRGB(110, 190, 150), Bad = Color3.fromRGB(220, 96, 110), Warn = Color3.fromRGB(220, 176, 90),
+		Light = false,
+	},
+}
+
+local ThemeOrder = { "Slate", "Paper", "Forge", "Glacier", "Ember", "Orchid" }
+
+local FONT = Enum.Font.Gotham
+local FONT_MED = Enum.Font.GothamMedium
+local FONT_BOLD = Enum.Font.GothamBold
+
+-- ============ HELPERS ============
+local function create(class, props, children)
+	local inst = Instance.new(class)
+	for k, v in pairs(props or {}) do inst[k] = v end
+	for _, child in ipairs(children or {}) do child.Parent = inst end
+	return inst
+end
+
+local function corner(r) return create("UICorner", { CornerRadius = UDim.new(0, r or 10) }) end
+local function strokeUI(c, t) return create("UIStroke", { Color = c, Thickness = t or 1 }) end
+
+-- Spring-bounce tween: overshoot lalu settle, beda dari ease-out biasa
+local function springTween(obj, props, dur)
+	return TweenService:Create(obj, TweenInfo.new(dur or 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), props)
+end
+local function softTween(obj, props, dur)
+	return TweenService:Create(obj, TweenInfo.new(dur or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
+end
+
+-- Drag standar (snap langsung, tanpa inertia/lerp — beda pendekatan dari referensi sebelumnya)
+local function makeDraggable(handle, target)
+	local dragging, dragStart, startPos
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = target.Position
+			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+		end
+	end)
+	handle.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+local function hoverColor(button, normal, hover)
+	button.MouseEnter:Connect(function() softTween(button, { BackgroundColor3 = hover }):Play() end)
+	button.MouseLeave:Connect(function() softTween(button, { BackgroundColor3 = normal }):Play() end)
+end
+
+-- ============ LOADING SCREEN ============
+function ForgeUI:ShowLoading(config)
+	config = config or {}
+	local theme = Themes[config.Theme or "Slate"] or Themes.Slate
+	local duration = config.Duration or 1.8
+
+	local old = PlayerGui:FindFirstChild("ForgeUI_Loading")
+	if old then old:Destroy() end
+
+	local ScreenGui = create("ScreenGui", { Name = "ForgeUI_Loading", ResetOnSpawn = false, Parent = PlayerGui })
+	local Backdrop = create("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = theme.Background, BackgroundTransparency = 1, Parent = ScreenGui })
+	softTween(Backdrop, { BackgroundTransparency = 0 }, 0.3):Play()
+
+	-- Indikator loading: 3 dot yang bounce bergantian (beda dari ring spin)
+	local DotsWrap = create("Frame", { Size = UDim2.fromOffset(70, 16), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.46), BackgroundTransparency = 1, Parent = Backdrop })
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, Padding = UDim.new(0, 8) }).Parent = DotsWrap
+
+	local dots = {}
+	for i = 1, 3 do
+		dots[i] = create("Frame", { Size = UDim2.fromOffset(12, 12), BackgroundColor3 = theme.Accent, Parent = DotsWrap }, { corner(6) })
+	end
+
+	task.spawn(function()
+		local i = 1
+		while DotsWrap.Parent do
+			for j, dot in ipairs(dots) do
+				if j == i then
+					springTween(dot, { Size = UDim2.fromOffset(16, 16) }, 0.25):Play()
+				else
+					softTween(dot, { Size = UDim2.fromOffset(12, 12) }, 0.25):Play()
+				end
+			end
+			i = (i % 3) + 1
+			task.wait(0.3)
+		end
+	end)
+
+	create("TextLabel", {
+		Text = config.Title or "Loading", Font = FONT_BOLD, TextSize = 15, TextColor3 = theme.Text,
+		AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0.46, 28), Size = UDim2.fromOffset(280, 20),
+		BackgroundTransparency = 1, Parent = Backdrop,
+	})
+
+	task.delay(duration, function()
+		local out = softTween(Backdrop, { BackgroundTransparency = 1 }, 0.3)
+		out:Play()
+		out.Completed:Connect(function()
+			ScreenGui:Destroy()
+			if config.OnComplete then config.OnComplete() end
+		end)
+	end)
+end
+
+-- ============ NOTIFY ============
+local NotifyHolder
+local ActiveTheme = Themes.Slate
+
+local function ensureNotifyHolder()
+	if NotifyHolder and NotifyHolder.Parent then return NotifyHolder end
+	local gui = create("ScreenGui", { Name = "ForgeUI_Notify", ResetOnSpawn = false, Parent = PlayerGui })
+	NotifyHolder = create("Frame", { Size = UDim2.fromOffset(290, 440), Position = UDim2.new(1, -306, 1, -20), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, Parent = gui })
+	create("UIListLayout", { VerticalAlignment = Enum.VerticalAlignment.Bottom, Padding = UDim.new(0, 8) }).Parent = NotifyHolder
+	return NotifyHolder
+end
+
+function ForgeUI:Notify(config)
+	config = config or {}
+	local theme = ActiveTheme
+	local colorMap = { Good = theme.Good, Bad = theme.Bad, Warn = theme.Warn }
+	local barColor = colorMap[config.Type] or theme.Accent
+	local holder = ensureNotifyHolder()
+
+	local card = create("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = theme.Card, ClipsDescendants = true, Parent = holder }, { corner(10), strokeUI(theme.Border, 1) })
+	create("Frame", { Size = UDim2.new(0, 3, 1, -16), Position = UDim2.fromOffset(0, 8), BackgroundColor3 = barColor, Parent = card }, { corner(2) })
+	create("TextLabel", { Text = config.Title or "Notification", Font = FONT_BOLD, TextSize = 12.5, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 9), Size = UDim2.new(1, -26, 0, 16), TextXAlignment = Enum.TextXAlignment.Left, Parent = card })
+	if config.Content then
+		create("TextLabel", { Text = config.Content, Font = FONT, TextSize = 11, TextColor3 = theme.SubText, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 26), Size = UDim2.new(1, -26, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = card })
+	end
+	create("UIPadding", { PaddingBottom = UDim.new(0, 10) }).Parent = card
+
+	card.Position = UDim2.new(1, 30, 0, 0)
+	springTween(card, { Position = UDim2.new(0, 0, 0, 0) }, 0.4):Play()
+	task.delay(config.Duration or 4, function()
+		local out = softTween(card, { Position = UDim2.new(1, 30, 0, 0) }, 0.25)
+		out:Play()
+		out.Completed:Connect(function() card:Destroy() end)
+	end)
+end
+
+-- ============ WINDOW ============
+function ForgeUI:CreateWindow(config)
+	config = config or {}
+	local theme = Themes[config.Theme or "Slate"] or Themes.Slate
+	ActiveTheme = theme
+
+	local old = PlayerGui:FindFirstChild("ForgeUI_Window")
+	if old then old:Destroy() end
+
+	local ScreenGui = create("ScreenGui", { Name = "ForgeUI_Window", ResetOnSpawn = false, Parent = PlayerGui })
+
+	local size = config.Size or UDim2.fromOffset(680, 440)
+	local Main = create("Frame", {
+		Size = UDim2.fromOffset(size.X.Offset, 0),
+		Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2),
+		BackgroundColor3 = theme.Background, ClipsDescendants = true, Parent = ScreenGui,
+	}, { corner(14), strokeUI(theme.Border, 1.2) })
+
+	springTween(Main, { Size = size }, 0.4):Play()
+
+	local TopBar = create("Frame", { Size = UDim2.new(1, 0, 0, 76), BackgroundColor3 = theme.Card, Parent = Main }, { corner(14) })
+	create("Frame", { Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 1, -14), BackgroundColor3 = theme.Card, BorderSizePixel = 0, Parent = TopBar })
+
+	create("TextLabel", { Text = config.Title or "ForgeUI", Font = FONT_BOLD, TextSize = 14, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 8), Size = UDim2.new(0.5, 0, 0, 18), TextXAlignment = Enum.TextXAlignment.Left, Parent = TopBar })
+	if config.SubTitle then
+		create("TextLabel", { Text = config.SubTitle, Font = FONT, TextSize = 11, TextColor3 = theme.SubText, BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 26), Size = UDim2.new(0.5, 0, 0, 14), TextXAlignment = Enum.TextXAlignment.Left, Parent = TopBar })
+	end
+
+	local CloseBtn = create("TextButton", { Text = "", BackgroundColor3 = theme.Elevated, AutoButtonColor = false, Position = UDim2.new(1, -42, 0, 8), Size = UDim2.fromOffset(26, 26), Parent = TopBar }, { corner(7), strokeUI(theme.Border, 1) })
+	create("Frame", { Size = UDim2.fromOffset(10, 1.6), Position = UDim2.new(0.5, -5, 0.5, -0.8), Rotation = 45, BackgroundColor3 = theme.SubText, Parent = CloseBtn }, { corner(1) })
+	create("Frame", { Size = UDim2.fromOffset(10, 1.6), Position = UDim2.new(0.5, -5, 0.5, -0.8), Rotation = -45, BackgroundColor3 = theme.SubText, Parent = CloseBtn }, { corner(1) })
+	hoverColor(CloseBtn, theme.Elevated, theme.Border)
+	CloseBtn.MouseButton1Click:Connect(function()
+		local out = softTween(Main, { Size = UDim2.fromOffset(size.X.Offset, 0) }, 0.25)
+		out:Play()
+		out.Completed:Connect(function() ScreenGui:Destroy() end)
+	end)
+
+	makeDraggable(TopBar, Main)
+
+	-- Tab pills horizontal di bawah header
+	local TabBar = create("Frame", { Size = UDim2.new(1, -36, 0, 36), Position = UDim2.fromOffset(18, 44), BackgroundTransparency = 1, Parent = TopBar })
+	local TabBarScroll = create("ScrollingFrame", {
+		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
+		ScrollBarThickness = 0, ScrollingDirection = Enum.ScrollingDirection.X,
+		CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.X, Parent = TabBar,
+	})
+	create("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Center }).Parent = TabBarScroll
+
+	local Body = create("Frame", { Size = UDim2.new(1, -36, 1, -94), Position = UDim2.fromOffset(18, 88), BackgroundTransparency = 1, Parent = Main })
+
+	local Window = { Theme = theme, Tabs = {}, _firstTab = true }
+	setmetatable(Window, ForgeUI)
+	Window._TabBar = TabBarScroll
+	Window._Body = Body
+
+	return Window
+end
+
+-- ============ TAB ============
+function ForgeUI.CreateTab(self, name)
+	local theme = self.Theme
+	local TabBtn = create("TextButton", {
+		Text = name, Font = FONT_MED, TextSize = 12.5, TextColor3 = theme.SubText,
+		BackgroundColor3 = theme.Elevated, AutoButtonColor = false,
+		Size = UDim2.fromOffset(0, 30), AutomaticSize = Enum.AutomaticSize.X, Parent = self._TabBar,
+	}, { corner(15) })
+	create("UIPadding", { PaddingLeft = UDim.new(0, 16), PaddingRight = UDim.new(0, 16) }).Parent = TabBtn
+
+	local Page = create("ScrollingFrame", {
+		Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
+		ScrollBarThickness = 3, ScrollBarImageColor3 = theme.Accent,
+		CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		Visible = false, Parent = self._Body,
+	})
+	create("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }).Parent = Page
+	create("UIPadding", { PaddingBottom = UDim.new(0, 8) }).Parent = Page
+
+	local Tab = { Page = Page, Theme = theme }
+	setmetatable(Tab, ForgeUI)
+
+	local function select()
+		for _, t in ipairs(self.Tabs) do
+			t.Page.Visible = false
+			softTween(t.Button, { BackgroundColor3 = theme.Elevated, TextColor3 = theme.SubText }, 0.15):Play()
+		end
+		Page.Visible = true
+		springTween(TabBtn, { BackgroundColor3 = theme.Accent }, 0.3):Play()
+		softTween(TabBtn, { TextColor3 = theme.Light and Color3.new(1,1,1) or theme.Text }, 0.15):Play()
+	end
+
+	TabBtn.MouseButton1Click:Connect(select)
+	table.insert(self.Tabs, { Button = TabBtn, Page = Page })
+	if self._firstTab then self._firstTab = false; select() end
+	return Tab
+end
+
+-- ============ INPUT COMPONENTS ============
+function ForgeUI.CreateButton(self, config)
+	local theme = self.Theme
+	local Holder = create("TextButton", { Text = "", BackgroundColor3 = theme.Card, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 38), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Button", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -24, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	hoverColor(Holder, theme.Card, theme.Elevated)
+	Holder.MouseButton1Click:Connect(function()
+		springTween(Holder, { BackgroundColor3 = theme.Accent }, 0.15):Play()
+		task.delay(0.15, function() softTween(Holder, { BackgroundColor3 = theme.Elevated }, 0.2):Play() end)
+		local ok, err = pcall(config.Callback or function() end)
+		if not ok then warn("[ForgeUI] Button error:", err) end
+	end)
+	return Holder
+end
+
+function ForgeUI.CreateToggle(self, config)
+	local theme = self.Theme
+	local state = config.CurrentValue or false
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 38), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Toggle", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 0), Size = UDim2.new(1, -58, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local Switch = create("Frame", { Size = UDim2.fromOffset(36, 19), Position = UDim2.new(1, -48, 0.5, -9.5), BackgroundColor3 = state and theme.Accent or theme.Border, Parent = Holder }, { corner(10) })
+	local Knob = create("Frame", { Size = UDim2.fromOffset(15, 15), Position = state and UDim2.new(1, -17, 0.5, -7.5) or UDim2.new(0, 2, 0.5, -7.5), BackgroundColor3 = Color3.new(1,1,1), Parent = Switch }, { corner(8) })
+	local Click = create("TextButton", { Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1,1), Parent = Holder })
+	local function setState(v, fire)
+		state = v
+		softTween(Switch, { BackgroundColor3 = state and theme.Accent or theme.Border }, 0.15):Play()
+		springTween(Knob, { Position = state and UDim2.new(1, -17, 0.5, -7.5) or UDim2.new(0, 2, 0.5, -7.5) }, 0.25):Play()
+		if fire then local ok, err = pcall(config.Callback or function() end, state); if not ok then warn("[ForgeUI] Toggle error:", err) end end
+	end
+	Click.MouseButton1Click:Connect(function() setState(not state, true) end)
+	return { Set = function(v) setState(v, true) end, Get = function() return state end }
+end
+
+function ForgeUI.CreateSlider(self, config)
+	local theme = self.Theme
+	local range = config.Range or {0, 100}
+	local increment = config.Increment or 1
+	local value = config.CurrentValue or range[1]
+	local min, max = range[1], range[2]
+
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 50), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Slider", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -70, 0, 24), Position = UDim2.fromOffset(14, 4), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local ValueLabel = create("TextLabel", { Text = tostring(value), Font = FONT, TextSize = 11.5, TextColor3 = theme.SubText, BackgroundTransparency = 1, Size = UDim2.fromOffset(50, 24), Position = UDim2.new(1, -62, 0, 4), TextXAlignment = Enum.TextXAlignment.Right, Parent = Holder })
+	local Track = create("Frame", { Size = UDim2.new(1, -28, 0, 5), Position = UDim2.fromOffset(14, 34), BackgroundColor3 = theme.Border, Parent = Holder }, { corner(3) })
+	local function pct(v) return (v - min) / (max - min) end
+	local Fill = create("Frame", { Size = UDim2.new(pct(value), 0, 1, 0), BackgroundColor3 = theme.Accent, Parent = Track }, { corner(3) })
+	local Knob = create("Frame", { Size = UDim2.fromOffset(13, 13), Position = UDim2.new(pct(value), -6.5, 0.5, -6.5), BackgroundColor3 = Color3.new(1,1,1), Parent = Track }, { corner(7) })
+
+	local dragging = false
+	local function update(x)
+		local rel = math.clamp((x - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
+		local raw = min + rel * (max - min)
+		local stepped = math.clamp(math.floor(raw / increment + 0.5) * increment, min, max)
+		if stepped ~= value then
+			value = stepped
+			ValueLabel.Text = tostring(value)
+			Fill.Size = UDim2.new(pct(value), 0, 1, 0)
+			Knob.Position = UDim2.new(pct(value), -6.5, 0.5, -6.5)
+			local ok, err = pcall(config.Callback or function() end, value)
+			if not ok then warn("[ForgeUI] Slider error:", err) end
+		end
+	end
+	Track.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; update(i.Position.X) end end)
+	UserInputService.InputChanged:Connect(function(i) if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update(i.Position.X) end end)
+	UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+	return { Set = function(v) update(Track.AbsolutePosition.X + pct(v) * Track.AbsoluteSize.X) end, Get = function() return value end }
+end
+
+function ForgeUI.CreateDropdown(self, config)
+	local theme = self.Theme
+	local options = config.Options or {}
+	local multiSelect = config.MultiSelect or false
+	local selected = {}
+	if multiSelect then
+		for _, v in ipairs(config.CurrentOptions or {}) do selected[v] = true end
+	end
+	local current = config.CurrentOption or options[1] or ""
+
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 38), ClipsDescendants = true, Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Dropdown", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.new(0.5, -14, 0, 38), Position = UDim2.fromOffset(14, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local SelectedBtn = create("TextButton", { Text = multiSelect and (#config.CurrentOptions or 0) .. " dipilih" or current, Font = FONT, TextSize = 12, TextColor3 = theme.SubText, BackgroundColor3 = theme.Elevated, Size = UDim2.new(0.5, -14, 0, 26), Position = UDim2.new(0.5, 0, 0, 6), AutoButtonColor = false, TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder }, { corner(6) })
+	create("UIPadding", { PaddingLeft = UDim.new(0, 10) }).Parent = SelectedBtn
+	local ListFrame = create("Frame", { BackgroundColor3 = theme.Elevated, Size = UDim2.new(0.5, -14, 0, #options * 26), Position = UDim2.new(0.5, 0, 0, 38), Parent = Holder }, { corner(6) })
+	create("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }).Parent = ListFrame
+
+	local open = false
+	local function setOpen(v) open = v; Holder.Size = v and UDim2.new(1, 0, 0, 38 + #options * 26 + 6) or UDim2.new(1, 0, 0, 38) end
+
+	for _, opt in ipairs(options) do
+		local OptBtn = create("TextButton", { Text = opt, Font = FONT, TextSize = 12, TextColor3 = theme.Text, BackgroundColor3 = theme.Elevated, BackgroundTransparency = selected[opt] and 0.5 or 1, Size = UDim2.new(1, 0, 0, 26), Parent = ListFrame })
+		OptBtn.MouseEnter:Connect(function() if not selected[opt] then softTween(OptBtn, { BackgroundTransparency = 0.7 }, 0.1):Play() end end)
+		OptBtn.MouseLeave:Connect(function() if not selected[opt] then softTween(OptBtn, { BackgroundTransparency = 1 }, 0.1):Play() end end)
+		OptBtn.MouseButton1Click:Connect(function()
+			if multiSelect then
+				selected[opt] = not selected[opt]
+				OptBtn.BackgroundTransparency = selected[opt] and 0.5 or 1
+				local count = 0
+				for _ in pairs(selected) do count += 1 end
+				SelectedBtn.Text = count .. " dipilih"
+				local ok, err = pcall(config.Callback or function() end, selected)
+				if not ok then warn("[ForgeUI] Dropdown error:", err) end
+			else
+				current = opt
+				SelectedBtn.Text = current
+				setOpen(false)
+				local ok, err = pcall(config.Callback or function() end, current)
+				if not ok then warn("[ForgeUI] Dropdown error:", err) end
+			end
+		end)
+	end
+	SelectedBtn.MouseButton1Click:Connect(function() setOpen(not open) end)
+	return { Set = function(v) current = v; SelectedBtn.Text = v end }
+end
+
+function ForgeUI.CreateInput(self, config)
+	local theme = self.Theme
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 38), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Input", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.new(0.4, -14, 1, 0), Position = UDim2.fromOffset(14, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local Box = create("TextBox", { Text = "", PlaceholderText = config.PlaceholderText or "...", Font = FONT, TextSize = 12, TextColor3 = theme.Text, PlaceholderColor3 = theme.SubText, BackgroundColor3 = theme.Elevated, ClearTextOnFocus = false, Size = UDim2.new(0.6, -14, 0, 26), Position = UDim2.new(0.4, 0, 0.5, -13), Parent = Holder }, { corner(6) })
+	create("UIPadding", { PaddingLeft = UDim.new(0, 8) }).Parent = Box
+	Box.FocusLost:Connect(function(enter) local ok, err = pcall(config.Callback or function() end, Box.Text, enter); if not ok then warn("[ForgeUI] Input error:", err) end end)
+	return { Set = function(t) Box.Text = t end, Get = function() return Box.Text end }
+end
+
+function ForgeUI.CreateColorPicker(self, config)
+	local theme = self.Theme
+	local current = config.CurrentColor or Color3.new(1,1,1)
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 38), ClipsDescendants = true, Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Color", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -60, 0, 38), Position = UDim2.fromOffset(14, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local Swatch = create("TextButton", { Text = "", BackgroundColor3 = current, Size = UDim2.fromOffset(28, 22), Position = UDim2.new(1, -42, 0, 8), AutoButtonColor = false, Parent = Holder }, { corner(6), strokeUI(theme.Border, 1) })
+	local Panel = create("Frame", { BackgroundColor3 = theme.Elevated, Size = UDim2.new(1, -28, 0, 90), Position = UDim2.fromOffset(14, 44), Parent = Holder }, { corner(6) })
+	create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }).Parent = Panel
+	create("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) }).Parent = Panel
+
+	local open = false
+	local function setOpen(v) open = v; Holder.Size = v and UDim2.new(1, 0, 0, 144) or UDim2.new(1, 0, 0, 38) end
+	local r, g, b = current.R * 255, current.G * 255, current.B * 255
+
+	local function channel(label, initial, onChange)
+		local Row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Parent = Panel })
+		create("TextLabel", { Text = label, Font = FONT, TextSize = 11, TextColor3 = theme.SubText, BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 20), Parent = Row })
+		local Track = create("Frame", { BackgroundColor3 = theme.Border, Size = UDim2.new(1, -50, 0, 4), Position = UDim2.fromOffset(24, 8), Parent = Row }, { corner(2) })
+		local Fill = create("Frame", { BackgroundColor3 = theme.Accent, Size = UDim2.new(initial / 255, 0, 1, 0), Parent = Track }, { corner(2) })
+		local dragging = false
+		local function update(x)
+			local rel = math.clamp((x - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
+			Fill.Size = UDim2.new(rel, 0, 1, 0)
+			onChange(rel * 255)
+		end
+		Track.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true; update(i.Position.X) end end)
+		UserInputService.InputChanged:Connect(function(i) if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then update(i.Position.X) end end)
+		UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+	end
+
+	local function refresh()
+		local color = Color3.fromRGB(r, g, b)
+		Swatch.BackgroundColor3 = color
+		local ok, err = pcall(config.Callback or function() end, color)
+		if not ok then warn("[ForgeUI] ColorPicker error:", err) end
+	end
+	channel("R", r, function(v) r = v; refresh() end)
+	channel("G", g, function(v) g = v; refresh() end)
+	channel("B", b, function(v) b = v; refresh() end)
+	Swatch.MouseButton1Click:Connect(function() setOpen(not open) end)
+	return { Set = function(c) r, g, b = c.R*255, c.G*255, c.B*255; refresh() end }
+end
+
+function ForgeUI.CreateKeybind(self, config)
+	local theme = self.Theme
+	local current = config.CurrentKeybind or "None"
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 38), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Keybind", Font = FONT_MED, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -96, 1, 0), Position = UDim2.fromOffset(14, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local BindBtn = create("TextButton", { Text = current, Font = FONT, TextSize = 12, TextColor3 = theme.Text, BackgroundColor3 = theme.Elevated, Size = UDim2.fromOffset(80, 26), Position = UDim2.new(1, -94, 0.5, -13), AutoButtonColor = false, Parent = Holder }, { corner(6) })
+	local listening = false
+	BindBtn.MouseButton1Click:Connect(function() listening = true; BindBtn.Text = "..." end)
+	UserInputService.InputBegan:Connect(function(input)
+		if not listening then return end
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			current = input.KeyCode.Name
+			BindBtn.Text = current
+			listening = false
+			local ok, err = pcall(config.Callback or function() end, current)
+			if not ok then warn("[ForgeUI] Keybind error:", err) end
+		end
+	end)
+	return { Set = function(k) current = k; BindBtn.Text = k end }
+end
+
+-- ============ VISUAL/DECORATIVE COMPONENTS ============
+function ForgeUI.CreateSection(self, label)
+	local theme = self.Theme
+	local Holder = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 24), Parent = self.Page })
+	create("TextLabel", { Text = label, Font = FONT_BOLD, TextSize = 11.5, TextColor3 = theme.SubText, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 14), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	create("Frame", { BackgroundColor3 = theme.Border, Size = UDim2.new(1, 0, 0, 1), Position = UDim2.fromOffset(0, 19), Parent = Holder })
+end
+
+function ForgeUI.CreateLabel(self, text)
+	local theme = self.Theme
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = self.Page }, { corner(8) })
+	create("TextLabel", { Text = text or "", Font = FONT, TextSize = 12, TextColor3 = theme.SubText, BackgroundTransparency = 1, Size = UDim2.new(1, -24, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Position = UDim2.fromOffset(12, 8), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	create("UIPadding", { PaddingBottom = UDim.new(0, 8) }).Parent = Holder
+	return Holder
+end
+
+function ForgeUI.CreateBadge(self, config)
+	local theme = self.Theme
+	local colorMap = { Good = theme.Good, Bad = theme.Bad, Warn = theme.Warn }
+	local color = colorMap[config.Type] or theme.Accent
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 32), Parent = self.Page }, { corner(8), strokeUI(theme.Border, 1) })
+	create("Frame", { Size = UDim2.fromOffset(8, 8), Position = UDim2.fromOffset(14, 12), BackgroundColor3 = color, Parent = Holder }, { corner(4) })
+	create("TextLabel", { Text = config.Text or "Status", Font = FONT_MED, TextSize = 12, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -40, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	return Holder
+end
+
+function ForgeUI.CreateProgressBar(self, config)
+	local theme = self.Theme
+	local value = config.CurrentValue or 0
+	local max = config.Max or 100
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 46), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Name or "Progress", Font = FONT_MED, TextSize = 12.5, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 6), Size = UDim2.new(1, -28, 0, 16), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local Track = create("Frame", { Size = UDim2.new(1, -28, 0, 6), Position = UDim2.fromOffset(14, 30), BackgroundColor3 = theme.Border, Parent = Holder }, { corner(3) })
+	local Fill = create("Frame", { Size = UDim2.new(value/max, 0, 1, 0), BackgroundColor3 = theme.Accent, Parent = Track }, { corner(3) })
+	return {
+		Set = function(v)
+			value = math.clamp(v, 0, max)
+			springTween(Fill, { Size = UDim2.new(value/max, 0, 1, 0) }, 0.3):Play()
+		end
+	}
+end
+
+function ForgeUI.CreateProgressRing(self, config)
+	local theme = self.Theme
+	local value = config.CurrentValue or 0
+	local max = config.Max or 100
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 80), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	local RingWrap = create("Frame", { Size = UDim2.fromOffset(54, 54), Position = UDim2.fromOffset(13, 13), BackgroundTransparency = 1, Parent = Holder }, { corner(27) })
+	local ringStroke = create("UIStroke", { Color = theme.Accent, Thickness = 4, Parent = RingWrap })
+	create("Frame", { Size = UDim2.fromScale(1,1), BackgroundColor3 = theme.Elevated, Parent = RingWrap }, { corner(27) })
+	local PercentLabel = create("TextLabel", { Text = math.floor(value/max*100) .. "%", Font = FONT_BOLD, TextSize = 13, TextColor3 = theme.Text, BackgroundTransparency = 1, Size = UDim2.fromScale(1,1), Parent = RingWrap })
+	create("TextLabel", { Text = config.Name or "", Font = FONT_MED, TextSize = 12.5, TextColor3 = theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(80, 28), Size = UDim2.new(1, -94, 0, 20), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	return { Set = function(v) value = math.clamp(v, 0, max); PercentLabel.Text = math.floor(value/max*100) .. "%" end }
+end
+
+function ForgeUI.CreateStatCard(self, config)
+	local theme = self.Theme
+	local Holder = create("Frame", { BackgroundColor3 = theme.Card, Size = UDim2.new(1, 0, 0, 56), Parent = self.Page }, { corner(9), strokeUI(theme.Border, 1) })
+	create("TextLabel", { Text = config.Label or "Stat", Font = FONT, TextSize = 11.5, TextColor3 = theme.SubText, BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 8), Size = UDim2.new(1, -28, 0, 14), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	local ValueLabel = create("TextLabel", { Text = tostring(config.Value or 0), Font = FONT_BOLD, TextSize = 20, TextColor3 = theme.Accent, BackgroundTransparency = 1, Position = UDim2.fromOffset(14, 24), Size = UDim2.new(1, -28, 0, 26), TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
+	return { Set = function(v) ValueLabel.Text = tostring(v) end }
+end
+
+function ForgeUI.CreateDivider(self)
+	local theme = self.Theme
+	return create("Frame", { BackgroundColor3 = theme.Border, Size = UDim2.new(1, 0, 0, 1), Parent = self.Page })
+end
+
+-- ============ THEME PICKER ============
+function ForgeUI.CreateThemePicker(self, config)
+	config = config or {}
+	return self:CreateDropdown({
+		Name = config.Name or "Theme",
+		Options = ThemeOrder,
+		CurrentOption = ActiveTheme.Name or "Slate",
+		Callback = function(name)
+			ForgeUI:Notify({ Title = "Tema Diganti", Content = name .. " — buka ulang window untuk menerapkan penuh.", Duration = 4 })
+			if config.Callback then config.Callback(name) end
+		end
+	})
+end
+
+return ForgeUI
